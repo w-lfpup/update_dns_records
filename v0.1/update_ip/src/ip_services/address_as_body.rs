@@ -9,10 +9,10 @@ use crate::type_flyweight::IpServiceResult;
 pub async fn request_address_as_response_body(
     mut ip_service_result: IpServiceResult,
 ) -> IpServiceResult {
-		// bail early if ip_service is None
+    // bail early if ip_service is None
     let ip_service = match &ip_service_result.service {
-    	Some(service) => service,
-    	_ => return ip_service_result,
+        Some(service) => service,
+        _ => return ip_service_result,
     };
 
     let request = match requests::create_request_with_empty_body(&ip_service) {
@@ -49,12 +49,12 @@ pub async fn request_address_as_response_body(
     };
 
     if let Some(response) = &ip_service_result.response {
-    		match response.body.parse::<net::IpAddr>() {
-    			Ok(_ip) => ip_service_result.address = Some(response.body.clone()),
-    			_ => ip_service_result
+        match response.body.parse::<net::IpAddr>() {
+            Ok(_ip) => ip_service_result.address = Some(response.body.clone()),
+            _ => ip_service_result
                 .errors
                 .push("ip address could not be parsed from response".to_string()),
-    		}
+        }
     }
 
     ip_service_result

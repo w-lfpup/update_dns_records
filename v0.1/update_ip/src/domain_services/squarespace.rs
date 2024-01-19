@@ -3,10 +3,8 @@ use http::Request;
 use http_body_util::Empty;
 use std::collections::HashSet;
 
-use crate::type_flyweight::DomainResult;
-use crate::type_flyweight::Squarespace;
-use crate::type_flyweight::UpdateIpResults;
 use crate::config::Config;
+use crate::type_flyweight::{DomainResult, Squarespace, UpdateIpResults};
 
 /*
 https://support.google.com/domains/answer/6147083?hl=en
@@ -31,30 +29,30 @@ pub async fn update_domains(
     config: &Config,
     retry_set: &HashSet<String>,
 ) -> Vec<DomainResult> {
-		// don't fetch results if there are no squarespace domains
+    // don't fetch results if there are no squarespace domains
     let domains = match &config.domain_services.squarespace {
-    	Some(d) => d,
-    	_ => return domain_results,
+        Some(d) => d,
+        _ => return domain_results,
     };
-    
+
     // don't fetch if there isn't an address
     let address = match &prev_results.ip_service_result.address {
-    	Some(d) => d,
-    	_ => return domain_results,
+        Some(d) => d,
+        _ => return domain_results,
     };
-    
+
     let address_updated = prev_results.ip_service_result.address_changed;
 
-		println!("iterating through domains");
+    println!("iterating through domains");
 
     for domain in domains {
         // do not update domain if address didn't change
-        // and 
-    		println!("{:?}", domain);
+        // and
+        println!("{:?}", domain);
         if !address_updated && !retry_set.contains(&domain.hostname) {
             continue;
         }
-    		println!("made it past the addition sieve");
+        println!("made it past the addition sieve");
         let mut domain_result = DomainResult {
             domain: domain.hostname.clone(),
             retry: false,

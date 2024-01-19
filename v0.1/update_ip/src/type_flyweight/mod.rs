@@ -47,4 +47,3 @@ pub struct Squarespace {
 pub struct DomainServices {
     pub squarespace: Option<Vec<Squarespace>>,
 }
-

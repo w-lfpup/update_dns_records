@@ -62,13 +62,13 @@ pub fn write_to_file(
 }
 
 pub fn create_retry_set(results: &UpdateIpResults) -> HashSet<String> {
-	let mut retry_set = HashSet::<String>::new();
-	
-	for domain_result in &results.domain_service_results {
-		if domain_result.retry {
-			retry_set.insert(domain_result.domain.clone());
-		}
-	}
+    let mut retry_set = HashSet::<String>::new();
 
-	retry_set
+    for domain_result in &results.domain_service_results {
+        if domain_result.retry {
+            retry_set.insert(domain_result.domain.clone());
+        }
+    }
+
+    retry_set
 }
