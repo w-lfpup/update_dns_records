@@ -5,10 +5,13 @@ use std::collections::HashSet;
 
 use crate::config::Config;
 use crate::type_flyweight::{DomainResult, Squarespace, UpdateIpResults};
+use crate::requests;
 
 /*
 https://support.google.com/domains/answer/6147083?hl=en
 
+requests must have a agent user
+        
 Response 	Status 	Description
 good {user’s IP address} 	Success 	The update was successful. You should not attempt another update until your IP address changes.
 nochg {user’s IP address} 	Success 	The supplied IP address is already set for this host. You should not attempt another update until your IP address changes.
@@ -62,24 +65,21 @@ pub async fn update_domains(
 
         let uri_str = get_uri(domain, address);
 
-        // requests must have a agent user
-        let _request = match Request::builder()
+				// build request
+				let mut request = None;
+       	match Request::builder()
             .uri(uri_str)
             .header(hyper::header::HOST, "domains.google.com:443")
             .header(hyper::header::USER_AGENT, "hyper/1.0 rust-client")
             .body(Empty::<Bytes>::new())
         {
-            Ok(s) => Some(s),
-            _ => {
-                // log error in results, failed to make a string
-                domain_result
+            Ok(s) => request = Some(s),
+            _ => domain_result
                     .errors
-                    .push("could not build squarespace dns request".to_string());
-                None
-            }
+                    .push("could not build squarespace dns request".to_string()),
         };
 
-        /*
+				// if request was successful, get response
         let mut res = None;
         if let Some(req) = request {
             match requests::request_http1_tls_response(req).await {
@@ -92,28 +92,26 @@ pub async fn update_domains(
             };
         }
 
+				// if response was successful, get jsonable struct
         if let Some(res) = res {
             match requests::convert_response_to_json(res).await {
-                Ok(r) => domain_result.response = Some(r),
-                _ => {
-                    domain_result
-                        .errors
-                        .push("could not create jsonable response".to_string());
-                    return Err(());
-                }
-            };
+              Ok(r) => domain_result.response = Some(r),
+              _ => domain_result
+                    .errors
+                    .push("could not create jsonable response".to_string()),
+            }
         };
 
-        // only valid retries are
-        // - request failed
-        // - service returns "911"
+				// if jsonable was successful, calculate retry
+        //	only valid retries are
+        //		- request failed
+        //		- service returns "911"
         if let Some(response) = &domain_result.response {
-            domain_result.retry = response.body.starts_with(&"911".to_string())
-                || response.status_code != http::status::StatusCode::OK;
+            domain_result.retry = response.status_code != http::status::StatusCode::OK
+                || response.body.starts_with(&"911".to_string());
         }
 
-
-        */
+				// finally push domain_results into
         domain_results.push(domain_result);
     }
 
