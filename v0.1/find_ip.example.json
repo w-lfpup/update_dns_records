@@ -1,0 +1,14 @@
+{
+	"results_filepath": "./find_ip.results.example.json",
+	"ip_services": [
+		["https://checkip.amazonaws.com/", "address_as_body"],
+		["https://domains.google.com/checkip", "address_as_body"]
+	],
+	"domain_services": {
+		"squarespace": [{
+				"hostname": "something.com",
+				"username": "...",
+				"password": "..."
+		}]
+	}
+}
