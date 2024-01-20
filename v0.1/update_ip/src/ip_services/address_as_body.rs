@@ -17,10 +17,10 @@ pub async fn request_address_as_response_body(
 
     let request = match requests::create_request_with_empty_body(&ip_service) {
         Ok(req) => Some(req),
-        _ => {
+        Err(e) => {
             ip_service_result
                 .errors
-                .push("could not create request".to_string());
+                .push(e);
             None
         }
     };
@@ -29,10 +29,10 @@ pub async fn request_address_as_response_body(
     if let Some(req) = request {
         match requests::request_http1_tls_response(req).await {
             Ok(r) => response = Some(r),
-            _ => {
+            Err(e) => {
                 ip_service_result
                     .errors
-                    .push("ip service request failed".to_string());
+                    .push(e);
             }
         };
     }

@@ -20,13 +20,22 @@ pub fn create_ip_service_result() -> IpServiceResult {
     }
 }
 
+pub fn create_domain_result(hostname: &String) -> DomainResult {
+	DomainResult {
+    hostname: hostname.clone(),
+    retry: false,
+    errors: Vec::<String>::new(),
+    response: None,
+  }
+}
+
 fn create_results() -> UpdateIpResults {
     UpdateIpResults {
         ip_service_result: create_ip_service_result(),
         domain_service_results: Vec::<DomainResult>::new(),
     }
 }
-
+   
 /*
     part of top-level function series
 */
@@ -66,7 +75,7 @@ pub fn create_retry_set(results: &UpdateIpResults) -> HashSet<String> {
 
     for domain_result in &results.domain_service_results {
         if domain_result.retry {
-            retry_set.insert(domain_result.domain.clone());
+            retry_set.insert(domain_result.hostname.clone());
         }
     }
 

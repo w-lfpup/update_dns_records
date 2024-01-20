@@ -27,18 +27,18 @@ use crate::type_flyweight::ResponseJson;
 
 pub async fn request_http1_tls_response(
     req: Request<Empty<Bytes>>,
-) -> Result<Response<Incoming>, ()> {
+) -> Result<Response<Incoming>, String> {
     let (host, addr) = match create_host_and_authority(&req) {
         Some(stream) => stream,
-        _ => return Err(()),
+        _ => return Err("failed to get host and address from uri".to_string()),
     };
     let io = match create_tls_stream(&host, &addr).await {
         Some(stream) => stream,
-        _ => return Err(()),
+        _ => return Err("failed to create tls stream".to_string()),
     };
     let (mut sender, conn) = match http1::handshake(io).await {
         Ok(handshake) => handshake,
-        _ => return Err(()),
+        _ => return Err("tcp handshake failed".to_string()),
     };
     tokio::task::spawn(async move {
         if let Err(_err) = conn.await { /* log connection error */ }
@@ -46,7 +46,7 @@ pub async fn request_http1_tls_response(
 
     let res = match sender.send_request(req).await {
         Ok(res) => res,
-        _ => return Err(()),
+        Err(e) => return Err(e.to_string()),
     };
 
     Ok(res)

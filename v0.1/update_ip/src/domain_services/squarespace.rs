@@ -6,7 +6,7 @@ use std::collections::HashSet;
 use crate::config::Config;
 use crate::type_flyweight::{DomainResult, Squarespace, UpdateIpResults};
 use crate::requests;
-
+use crate::results;
 /*
 https://support.google.com/domains/answer/6147083?hl=en
 
@@ -46,22 +46,15 @@ pub async fn update_domains(
 
     let address_updated = prev_results.ip_service_result.address_changed;
 
-    println!("iterating through domains");
 
     for domain in domains {
         // do not update domain if address didn't change
-        // and
-        println!("{:?}", domain);
+        // and current domain is not in retry set
         if !address_updated && !retry_set.contains(&domain.hostname) {
             continue;
         }
-        println!("made it past the addition sieve");
-        let mut domain_result = DomainResult {
-            domain: domain.hostname.clone(),
-            retry: false,
-            errors: Vec::<String>::new(),
-            response: None,
-        };
+
+        let mut domain_result = results::create_domain_result(&domain.hostname);
 
         let uri_str = get_uri(domain, address);
 
