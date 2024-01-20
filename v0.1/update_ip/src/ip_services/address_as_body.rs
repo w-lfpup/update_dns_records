@@ -1,7 +1,6 @@
 use std::net;
 
 use crate::requests;
-use crate::results;
 use crate::type_flyweight::IpServiceResult;
 
 // base use case

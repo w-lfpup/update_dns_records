@@ -9,7 +9,7 @@ use hyper::body::Incoming;
 use hyper::client::conn::http1;
 use hyper_util::rt::TokioIo;
 use native_tls::TlsConnector;
-use std::time::{SystemTime, SystemTimeError};
+use std::time::SystemTime;
 use tokio::net::TcpStream;
 
 use crate::type_flyweight::ResponseJson;
@@ -33,12 +33,12 @@ pub async fn request_http1_tls_response(
         _ => return Err("failed to get host and address from uri".to_string()),
     };
     let io = match create_tls_stream(&host, &addr).await {
-        Some(stream) => stream,
-        _ => return Err("failed to create tls stream".to_string()),
+        Ok(stream) => stream,
+        Err(e) => return Err(e),
     };
     let (mut sender, conn) = match http1::handshake(io).await {
         Ok(handshake) => handshake,
-        _ => return Err("tcp handshake failed".to_string()),
+        Err(e) => return Err(e.to_string()),
     };
     tokio::task::spawn(async move {
         if let Err(_err) = conn.await { /* log connection error */ }
@@ -57,25 +57,25 @@ pub async fn request_http1_tls_response(
 async fn create_tls_stream(
     host: &str,
     addr: &str,
-) -> Option<TokioIo<tokio_native_tls::TlsStream<TcpStream>>> {
+) -> Result<TokioIo<tokio_native_tls::TlsStream<TcpStream>>, String> {
     let tls_connector = match TlsConnector::new() {
         Ok(cx) => tokio_native_tls::TlsConnector::from(cx),
-        _ => return None,
+        Err(e) => return Err(e.to_string()),
     };
 
     let client_stream = match TcpStream::connect(addr).await {
         Ok(s) => s,
         Err(e) => {
-            return None;
+            return Err(e.to_string());
         }
     };
 
     let tls_stream = match tls_connector.connect(host, client_stream).await {
         Ok(s) => TokioIo::new(s),
-        _ => return None,
+        Err(e) => return Err(e.to_string()),
     };
 
-    Some(tls_stream)
+    Ok(tls_stream)
 }
 
 fn create_host_and_authority(req: &Request<Empty<Bytes>>) -> Option<(&str, String)> {
