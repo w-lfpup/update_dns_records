@@ -60,9 +60,6 @@ pub async fn update_domains(
         // if new / not in previous results, "retry"
         // if prev results existed get retry and critical
         let mut retry = true;
-        // think about merits of critical
-        // did a user get blocked? Catostrophic error?
-        let critical = false;
         if let Some(prev_result) = prev_domain_result {
             retry = prev_result.retry;
         }
@@ -96,8 +93,6 @@ pub async fn update_domains(
             }
         };
 
-        println!("{:?}", request);
-
         // if request was successful, get response
         let mut response = None;
         if let Some(req) = request {
@@ -106,7 +101,6 @@ pub async fn update_domains(
                 Err(e) => {
                     domain_result.retry = true;
                     domain_result.errors.push(e.to_string());
-
                     None
                 }
             };
