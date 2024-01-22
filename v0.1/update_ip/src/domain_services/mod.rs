@@ -7,7 +7,7 @@ mod squarespace;
 // must update and return results
 pub async fn update_domains(mut results: UpdateIpResults, config: &Config) -> UpdateIpResults {
     // bail early when no address is provided
-    // or if there is no update
+    // keep previous results
     if let None = &results.ip_service_result.address {
         return results;
     };

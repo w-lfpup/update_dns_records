@@ -37,11 +37,20 @@ pub async fn request_ip(mut results: UpdateIpResults, config: &Config) -> Update
     }
 
     ip_service_result.address_changed = has_address_changed(&results, &ip_service_result);
-
-    // move updated ip_service_result to results
     results.ip_service_result = ip_service_result;
 
     results
+}
+
+fn has_address_changed(results: &UpdateIpResults, ip_service_result: &IpServiceResult) -> bool {
+    match (
+        &results.ip_service_result.address,
+        &ip_service_result.address,
+    ) {
+        (Some(prev_ip), Some(curr_ip)) => prev_ip != curr_ip,
+        (None, Some(_curr_ip)) => true,
+        _ => false,
+    }
 }
 
 fn get_ip_service(results: &UpdateIpResults, config: &Config) -> Option<(String, String)> {
@@ -55,8 +64,7 @@ fn get_ip_service(results: &UpdateIpResults, config: &Config) -> Option<(String,
 
     let mut prev_index = None;
     if let Some(service) = &results.ip_service_result.service {
-        let mut index = 0;
-        for (url, _ip_service_type) in &config.ip_services {
+        for (index, (url, _ip_service_type)) in config.ip_services.iter().enumerate() {
             if url == service {
                 prev_index = Some(index);
                 break;
@@ -80,15 +88,4 @@ fn get_ip_service(results: &UpdateIpResults, config: &Config) -> Option<(String,
     }
 
     return Some(config.ip_services[random_index].clone());
-}
-
-fn has_address_changed(results: &UpdateIpResults, ip_service_result: &IpServiceResult) -> bool {
-    match (
-        &results.ip_service_result.address,
-        &ip_service_result.address,
-    ) {
-        (Some(prev_ip), Some(curr_ip)) => prev_ip != curr_ip,
-        (None, Some(_curr_ip)) => true,
-        _ => false,
-    }
 }

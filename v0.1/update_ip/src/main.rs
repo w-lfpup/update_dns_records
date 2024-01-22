@@ -29,7 +29,7 @@ async fn main() {
         Err(e) => return println!("configuration error:\n{}", e),
     };
 
-    let mut results = match results::load_or_create_results(&config) {
+    let mut results = match results::load_or_create_results(&config).await {
         Some(r) => r,
         None => return println!("results error:\nresults file not found."),
     };
@@ -37,7 +37,7 @@ async fn main() {
     results = ip_services::request_ip(results, &config).await;
     // results = domain_services::update_domains(results, &config).await;
 
-    if let Err(e) = results::write_to_file(results, &config) {
+    if let Err(e) = results::write_to_file(results, &config).await {
         return println!("file error:\n{}", e);
     };
 }

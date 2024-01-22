@@ -1,7 +1,5 @@
 use std::collections::HashSet;
-use std::fs::File;
-use std::io::BufWriter;
-use std::io::Write;
+use tokio::fs;
 
 // can use after mod declaration
 use crate::config::Config;
@@ -39,33 +37,31 @@ fn create_results() -> UpdateIpResults {
 /*
     part of top-level function series
 */
-pub fn load_or_create_results(config: &Config) -> Option<UpdateIpResults> {
-    let json_as_str = match File::open(&config.results_filepath) {
+pub async fn load_or_create_results(config: &Config) -> Option<UpdateIpResults> {
+    let json_as_str = match fs::read_to_string(&config.results_filepath).await {
         Ok(r) => r,
-        Err(e) => return None,
+        Err(_e) => return None,
     };
 
-    match serde_json::from_reader(&json_as_str) {
+    match serde_json::from_str(&json_as_str) {
         Ok(j) => Some(j),
-        Err(e) => return Some(create_results()),
+        Err(_e) => return Some(create_results()),
     }
 }
 
 /*
     part of top-level function series
 */
-pub fn write_to_file(
+pub async fn write_to_file(
     results: UpdateIpResults,
     config: &Config,
-) -> Result<UpdateIpResults, std::io::Error> {
-    let file = match File::create(&config.results_filepath) {
+) -> Result<UpdateIpResults, String> {
+    let json_str = match serde_json::to_string_pretty(&results) {
         Ok(f) => f,
-        Err(e) => return Err(e),
+        Err(e) => return Err(e.to_string()),
     };
-    let mut writer = BufWriter::new(file);
-    let _ = serde_json::to_writer_pretty(&mut writer, &results);
-    // serde_json::to_writer(&mut writer, &results);
-    let _ = writer.flush();
+
+    let _ = tokio::fs::write(&config.results_filepath, json_str).await;
 
     Ok(results)
 }

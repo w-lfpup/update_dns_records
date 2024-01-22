@@ -85,10 +85,20 @@ fn create_host_and_authority(req: &Request<Empty<Bytes>>) -> Option<(&str, Strin
         _ => return None,
     };
 
-    let authority = match req.uri().authority() {
-        Some(a) => a.clone().as_str().to_string().clone() + ":" + "443",
-        _ => return None,
+    let scheme = match req.uri().scheme() {
+        Some(s) => s.as_str(),
+        _ => http::uri::Scheme::HTTPS.as_str(),
     };
+
+    let port = match req.uri().port() {
+        Some(p) => p.to_string(),
+        _ => match scheme {
+            "http" => "80".to_string(),
+            _ => "443".to_string(),
+        },
+    };
+
+    let authority = host.to_string() + ":" + &port;
 
     Some((host, authority))
 }
