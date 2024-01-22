@@ -157,16 +157,16 @@ pub fn get_timestamp() -> Result<u128, String> {
 }
 
 pub async fn convert_response_to_json(res: Response<Incoming>) -> Result<ResponseJson, String> {
+    let timestamp = match get_timestamp() {
+        Ok(n) => n,
+        Err(e) => return Err(e.to_string()),
+    };
+
     let headers = get_headers(&res);
     let status = res.status().as_u16();
 
     let body_str = match response_body_to_string(res).await {
         Ok(r) => r,
-        Err(e) => return Err(e.to_string()),
-    };
-
-    let timestamp = match get_timestamp() {
-        Ok(n) => n,
         Err(e) => return Err(e.to_string()),
     };
 

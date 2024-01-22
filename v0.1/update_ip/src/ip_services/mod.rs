@@ -61,8 +61,6 @@ fn get_ip_service(results: &UpdateIpResults, config: &Config) -> Option<(String,
                 prev_index = Some(index);
                 break;
             };
-
-            index += 1;
         }
     }
 

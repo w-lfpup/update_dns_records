@@ -21,12 +21,12 @@ pub fn create_ip_service_result() -> IpServiceResult {
 }
 
 pub fn create_domain_result(hostname: &String) -> DomainResult {
-	DomainResult {
-    hostname: hostname.clone(),
-    retry: false,
-    errors: Vec::<String>::new(),
-    response: None,
-  }
+    DomainResult {
+        hostname: hostname.clone(),
+        retry: false,
+        errors: Vec::<String>::new(),
+        response: None,
+    }
 }
 
 fn create_results() -> UpdateIpResults {
@@ -35,7 +35,7 @@ fn create_results() -> UpdateIpResults {
         domain_service_results: Vec::<DomainResult>::new(),
     }
 }
-   
+
 /*
     part of top-level function series
 */
@@ -63,8 +63,8 @@ pub fn write_to_file(
         Err(e) => return Err(e),
     };
     let mut writer = BufWriter::new(file);
-    // serde_json::to_writer(&mut writer, &results);
     let _ = serde_json::to_writer_pretty(&mut writer, &results);
+    // serde_json::to_writer(&mut writer, &results);
     let _ = writer.flush();
 
     Ok(results)

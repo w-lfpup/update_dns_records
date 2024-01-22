@@ -9,7 +9,7 @@ pub async fn update_domains(mut results: UpdateIpResults, config: &Config) -> Up
     // bail early when no address is provided
     // or if there is no update
     if let None = &results.ip_service_result.address {
-      return results;
+        return results;
     };
 
     let retry_set = results::create_retry_set(&results);
