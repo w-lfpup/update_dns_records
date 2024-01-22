@@ -27,6 +27,10 @@ conflict A
 conflict AAAA 	Error 	A custom A or AAAA resource record conflicts with the update. Delete the indicated resource record within the DNS settings page and try the update again.
 */
 
+const SERVICE_URI_HOST: &str = "domains.google.com";
+const SERVICE_URI_AUTHORITY: &str = "domains.google.com:443";
+const CLIENT_HEADER_VALUE: &str = "hyper/1.0 rust-client";
+
 // must return results
 pub async fn update_domains(
     mut domain_results: HashMap<String, DomainResult>,
@@ -52,12 +56,18 @@ pub async fn update_domains(
         // and current domain is not in retry set
         let prev_domain_result = prev_results.domain_service_results.get(&domain.hostname);
 
-        let mut retry = false;
+        // someone could add or remove a domain from the config file between updates
+        // if new / not in previous results, "retry"
+        // if prev results existed get retry and critical
+        let mut retry = true;
+        // think about merits of critical
+        // did a user get blocked? Catostrophic error?
         let critical = false;
         if let Some(prev_result) = prev_domain_result {
             retry = prev_result.retry;
         }
 
+        // do not update if address has not changed and no retries
         if !address_updated && !retry {
             continue;
         }
@@ -65,9 +75,9 @@ pub async fn update_domains(
         let mut domain_result = results::create_domain_result(&domain.hostname);
 
         let uri_str = requests::get_https_dyndns2_uri(
-            "domains.google.com",
+            SERVICE_URI_HOST,
+            &address,
             &domain.hostname,
-            address,
             &domain.username,
             &domain.password,
         );
@@ -76,8 +86,8 @@ pub async fn update_domains(
         let mut request = None;
         match Request::builder()
             .uri(uri_str)
-            .header(hyper::header::HOST, "domains.google.com:443")
-            .header(hyper::header::USER_AGENT, "hyper/1.0 rust-client")
+            .header(hyper::header::HOST, SERVICE_URI_AUTHORITY)
+            .header(hyper::header::USER_AGENT, CLIENT_HEADER_VALUE)
             .body(Empty::<Bytes>::new())
         {
             Ok(s) => request = Some(s),
@@ -86,8 +96,11 @@ pub async fn update_domains(
                 .push("could not build squarespace dns request".to_string()),
         };
 
+        println!("{:?}", request);
+
         // if request was successful, get response
         let mut res = None;
+        /*
         if let Some(req) = request {
             match requests::request_http1_tls_response(req).await {
                 Ok(r) => res = Some(r),
@@ -97,6 +110,12 @@ pub async fn update_domains(
                         .push("squarespace request failed".to_string());
                 }
             };
+        }
+        */
+
+        // if response is none retry is true
+        if let None = res {
+            domain_result.retry = true;
         }
 
         // if response was successful, get jsonable struct
@@ -116,7 +135,7 @@ pub async fn update_domains(
         if let Some(response) = &domain_result.response {
             domain_result.retry = response.status_code != http::status::StatusCode::OK
                 || response.body.starts_with(&"911".to_string());
-        }
+        };
 
         // finally push domain_results into
         domain_results.insert(domain.hostname.clone(), domain_result);

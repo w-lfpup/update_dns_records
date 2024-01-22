@@ -65,17 +65,3 @@ pub async fn write_to_file(
 
     Ok(results)
 }
-
-/*
-pub fn create_retry_set(results: &UpdateIpResults) -> HashSet<String> {
-    let mut retry_set = HashSet::<String>::new();
-
-    for domain_result in &results.domain_service_results {
-        if domain_result.retry {
-            retry_set.insert(domain_result.hostname.clone());
-        }
-    }
-
-    retry_set
-}
-*/

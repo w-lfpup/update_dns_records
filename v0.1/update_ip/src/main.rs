@@ -35,7 +35,7 @@ async fn main() {
     };
 
     results = ip_services::request_ip(results, &config).await;
-    // results = domain_services::update_domains(results, &config).await;
+    results = domain_services::update_domains(results, &config).await;
 
     if let Err(e) = results::write_to_file(results, &config).await {
         return println!("file error:\n{}", e);

@@ -190,8 +190,8 @@ pub async fn convert_response_to_json(res: Response<Incoming>) -> Result<Respons
 
 pub fn get_https_dyndns2_uri(
     service_domain: &str,
-    hostname: &str,
     ip_addr: &str,
+    hostname: &str,
     username: &str,
     password: &str,
 ) -> String {

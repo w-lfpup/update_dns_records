@@ -10,7 +10,7 @@
       "headers": [
         [
           "date",
-          "Mon, 22 Jan 2024 09:41:56 GMT"
+          "Mon, 22 Jan 2024 23:08:06 GMT"
         ],
         [
           "server",
@@ -25,8 +25,15 @@
           "keep-alive"
         ]
       ],
-      "timestamp": 1705916516173
+      "timestamp": 1705964886359
     }
   },
-  "domain_service_results": []
+  "domain_service_results": {
+    "something.com": {
+      "hostname": "something.com",
+      "retry": true,
+      "errors": [],
+      "response": null
+    }
+  }
 }

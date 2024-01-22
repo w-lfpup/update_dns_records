@@ -62,6 +62,7 @@ fn get_ip_service(results: &UpdateIpResults, config: &Config) -> Option<(String,
         return Some(config.ip_services[0].clone());
     }
 
+    // get previous service index
     let mut prev_index = None;
     if let Some(service) = &results.ip_service_result.service {
         for (index, (url, _ip_service_type)) in config.ip_services.iter().enumerate() {
@@ -73,7 +74,7 @@ fn get_ip_service(results: &UpdateIpResults, config: &Config) -> Option<(String,
     }
 
     // config.ip_services might change between runs
-    // possibility
+    // possibility prev service doesn't exist
     let length = match prev_index {
         Some(_index) => config.ip_services.len() - 1,
         _ => config.ip_services.len(),
