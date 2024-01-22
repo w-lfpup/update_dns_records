@@ -9,12 +9,12 @@ mod address_as_body;
 
 pub async fn request_ip(mut results: UpdateIpResults, config: &Config) -> UpdateIpResults {
     // create new ip_service result
-    let mut ip_service_result = results::create_ip_service_result();
     // add previous address before requesting updated address
     // if ip service results fails, previous ip is preserved
+    let mut ip_service_result = results::create_ip_service_result();
     ip_service_result.address = results.ip_service_result.address.clone();
 
-    // get service
+    // get service or bail
     let response_type = match get_ip_service(&results, &config) {
         Some((ip_svc, resp_type)) => {
             ip_service_result.service = Some(ip_svc);

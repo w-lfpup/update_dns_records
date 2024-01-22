@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::config::Config;
 use crate::results;
 use crate::type_flyweight::{DomainResult, UpdateIpResults};
@@ -12,13 +14,10 @@ pub async fn update_domains(mut results: UpdateIpResults, config: &Config) -> Up
         return results;
     };
 
-    let retry_set = results::create_retry_set(&results);
-
     // add more ifs for more services
     // unfortunately that's the pattern but it's simple
-    let mut domain_results = Vec::<DomainResult>::new();
-    domain_results =
-        squarespace::update_domains(domain_results, &results, config, &retry_set).await;
+    let mut domain_results = HashMap::<String, DomainResult>::new();
+    domain_results = squarespace::update_domains(domain_results, &results, config).await;
 
     results.domain_service_results = domain_results;
 

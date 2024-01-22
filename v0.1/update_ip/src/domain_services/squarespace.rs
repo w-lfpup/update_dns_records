@@ -1,12 +1,14 @@
 use bytes::Bytes;
 use http::Request;
 use http_body_util::Empty;
+use std::collections::HashMap;
 use std::collections::HashSet;
 
 use crate::config::Config;
 use crate::requests;
 use crate::results;
 use crate::type_flyweight::{DomainResult, Squarespace, UpdateIpResults};
+
 /*
 https://support.google.com/domains/answer/6147083?hl=en
 
@@ -27,11 +29,10 @@ conflict AAAA 	Error 	A custom A or AAAA resource record conflicts with the upda
 
 // must return results
 pub async fn update_domains(
-    mut domain_results: Vec<DomainResult>,
+    mut domain_results: HashMap<String, DomainResult>,
     prev_results: &UpdateIpResults,
     config: &Config,
-    retry_set: &HashSet<String>,
-) -> Vec<DomainResult> {
+) -> HashMap<String, DomainResult> {
     // don't fetch results if there are no squarespace domains
     let domains = match &config.domain_services.squarespace {
         Some(d) => d,
@@ -49,13 +50,27 @@ pub async fn update_domains(
     for domain in domains {
         // do not update domain if address didn't change
         // and current domain is not in retry set
-        if !address_updated && !retry_set.contains(&domain.hostname) {
+        let prev_domain_result = prev_results.domain_service_results.get(&domain.hostname);
+
+        let mut retry = false;
+        let critical = false;
+        if let Some(prev_result) = prev_domain_result {
+            retry = prev_result.retry;
+        }
+
+        if !address_updated && !retry {
             continue;
         }
 
         let mut domain_result = results::create_domain_result(&domain.hostname);
 
-        let uri_str = get_uri(domain, address);
+        let uri_str = requests::get_https_dyndns2_uri(
+            "domains.google.com",
+            &domain.hostname,
+            address,
+            &domain.username,
+            &domain.password,
+        );
 
         // build request
         let mut request = None;
@@ -104,19 +119,8 @@ pub async fn update_domains(
         }
 
         // finally push domain_results into
-        domain_results.push(domain_result);
+        domain_results.insert(domain.hostname.clone(), domain_result);
     }
 
     domain_results
-}
-
-fn get_uri(domain: &Squarespace, ip_addr: &str) -> String {
-    "https://".to_string()
-        + &domain.username
-        + ":"
-        + &domain.password
-        + "@domains.google.com/nic/update?hostname="
-        + &domain.hostname
-        + "&myip="
-        + &ip_addr
 }

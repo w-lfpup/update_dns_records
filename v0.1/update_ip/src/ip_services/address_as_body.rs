@@ -15,37 +15,36 @@ pub async fn request_address_as_response_body(
     };
 
     let request = match requests::create_request_with_empty_body(&ip_service) {
-        Ok(req) => Some(req),
+        Ok(req) => req,
         Err(e) => {
             ip_service_result.errors.push(e);
+            return ip_service_result;
+        }
+    };
+
+    let response = match requests::request_http1_tls_response(request).await {
+        Ok(r) => r,
+        Err(e) => {
+            ip_service_result.errors.push(e);
+            return ip_service_result;
+        }
+    };
+
+    // track response
+    ip_service_result.response = match requests::convert_response_to_json(response).await {
+        Ok(j) => Some(j),
+        _ => {
+            ip_service_result
+                .errors
+                .push("failed to create jsonable response".to_string());
             None
         }
     };
 
-    let mut response = None;
-    if let Some(req) = request {
-        match requests::request_http1_tls_response(req).await {
-            Ok(r) => response = Some(r),
-            Err(e) => {
-                ip_service_result.errors.push(e);
-            }
-        };
-    }
-
-    if let Some(res) = response {
-        match requests::convert_response_to_json(res).await {
-            Ok(j) => ip_service_result.response = Some(j),
-            _ => {
-                ip_service_result
-                    .errors
-                    .push("failed to create jsonable response".to_string());
-            }
-        };
-    };
-
+    // get address if request is successful
     if let Some(response) = &ip_service_result.response {
         match response.body.parse::<net::IpAddr>() {
-            Ok(_ip) => ip_service_result.address = Some(response.body.clone()),
+            Ok(ip) => ip_service_result.address = Some(ip.to_string()),
             _ => ip_service_result
                 .errors
                 .push("ip address could not be parsed from response".to_string()),

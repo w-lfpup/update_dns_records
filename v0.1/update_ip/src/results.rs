@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::HashMap;
 use tokio::fs;
 
 // can use after mod declaration
@@ -30,7 +30,7 @@ pub fn create_domain_result(hostname: &String) -> DomainResult {
 fn create_results() -> UpdateIpResults {
     UpdateIpResults {
         ip_service_result: create_ip_service_result(),
-        domain_service_results: Vec::<DomainResult>::new(),
+        domain_service_results: HashMap::<String, DomainResult>::new(),
     }
 }
 
@@ -61,11 +61,12 @@ pub async fn write_to_file(
         Err(e) => return Err(e.to_string()),
     };
 
-    let _ = tokio::fs::write(&config.results_filepath, json_str).await;
+    let _ = fs::write(&config.results_filepath, json_str).await;
 
     Ok(results)
 }
 
+/*
 pub fn create_retry_set(results: &UpdateIpResults) -> HashSet<String> {
     let mut retry_set = HashSet::<String>::new();
 
@@ -77,3 +78,4 @@ pub fn create_retry_set(results: &UpdateIpResults) -> HashSet<String> {
 
     retry_set
 }
+*/
