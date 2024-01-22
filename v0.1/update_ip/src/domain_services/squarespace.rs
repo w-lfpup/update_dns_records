@@ -72,8 +72,6 @@ pub async fn update_domains(
             continue;
         }
 
-        let mut domain_result = results::create_domain_result(&domain.hostname);
-
         let uri_str = requests::get_https_dyndns2_uri(
             SERVICE_URI_HOST,
             &address,
@@ -82,49 +80,43 @@ pub async fn update_domains(
             &domain.password,
         );
 
+        let mut domain_result = results::create_domain_result(&domain.hostname);
+
         // build request
-        let mut request = None;
-        match Request::builder()
+        let request = match Request::builder()
             .uri(uri_str)
             .header(hyper::header::HOST, SERVICE_URI_AUTHORITY)
             .header(hyper::header::USER_AGENT, CLIENT_HEADER_VALUE)
             .body(Empty::<Bytes>::new())
         {
-            Ok(s) => request = Some(s),
-            _ => domain_result
-                .errors
-                .push("could not build squarespace dns request".to_string()),
+            Ok(s) => Some(s),
+            Err(e) => {
+                domain_result.errors.push(e.to_string());
+                None
+            }
         };
 
         println!("{:?}", request);
 
         // if request was successful, get response
-        let mut res = None;
-        /*
+        let mut response = None;
         if let Some(req) = request {
-            match requests::request_http1_tls_response(req).await {
-                Ok(r) => res = Some(r),
-                _ => {
-                    domain_result
-                        .errors
-                        .push("squarespace request failed".to_string());
+            response = match requests::request_http1_tls_response(req).await {
+                Ok(r) => Some(r),
+                Err(e) => {
+                    domain_result.retry = true;
+                    domain_result.errors.push(e.to_string());
+
+                    None
                 }
             };
         }
-        */
-
-        // if response is none retry is true
-        if let None = res {
-            domain_result.retry = true;
-        }
 
         // if response was successful, get jsonable struct
-        if let Some(res) = res {
+        if let Some(res) = response {
             match requests::convert_response_to_json(res).await {
                 Ok(r) => domain_result.response = Some(r),
-                _ => domain_result
-                    .errors
-                    .push("could not create jsonable response".to_string()),
+                Err(e) => domain_result.errors.push(e.to_string()),
             }
         };
 
