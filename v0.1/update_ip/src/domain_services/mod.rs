@@ -16,7 +16,7 @@ pub async fn update_domains(mut results: UpdateIpResults, config: &Config) -> Up
 
     // add more ifs for more services
     // unfortunately that's the pattern but it's simple
-    let mut domain_results = HashMap::<String, DomainResult>::new();
+    let mut domain_results = results.domain_service_results.clone();
     domain_results = squarespace::update_domains(domain_results, &results, config).await;
 
     results.domain_service_results = domain_results;

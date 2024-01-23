@@ -56,7 +56,7 @@ pub async fn update_domains(
     for domain in domains {
         // do not update domain if address didn't change
         // and current domain is not in retry set
-        let prev_domain_result = prev_results.domain_service_results.get(&domain.hostname);
+        let prev_domain_result = domain_results.get(&domain.hostname);
 
         // someone could add or remove a domain from the config file between updates
         // if new / not in previous results, "retry"
@@ -68,6 +68,10 @@ pub async fn update_domains(
 
         // do not update if address has not changed and no retries
         if !address_updated && !retry {
+        		// add old result to new result
+		        if let Some(prev_result) = prev_domain_result {
+		        	domain_results.insert(domain.hostname.clone(), prev_result.clone());
+		        }
             continue;
         }
 
@@ -122,8 +126,7 @@ pub async fn update_domains(
         //		- request failed
         //		- service returns "911"
         if let Some(response) = &domain_result.response {
-            domain_result.retry = response.status_code != http::status::StatusCode::OK
-                || response.body.starts_with(&"911".to_string());
+            domain_result.retry = response.body.starts_with(&"911".to_string());
         };
 
         // finally push domain_results into
