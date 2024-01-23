@@ -1,7 +1,5 @@
-use std::collections::HashSet;
-use std::fs::File;
-use std::io::BufWriter;
-use std::io::Write;
+use std::collections::HashMap;
+use tokio::fs;
 
 // can use after mod declaration
 use crate::config::Config;
@@ -20,55 +18,50 @@ pub fn create_ip_service_result() -> IpServiceResult {
     }
 }
 
+pub fn create_domain_result(hostname: &String) -> DomainResult {
+    DomainResult {
+        hostname: hostname.clone(),
+        retry: false,
+        errors: Vec::<String>::new(),
+        response: None,
+    }
+}
+
 fn create_results() -> UpdateIpResults {
     UpdateIpResults {
         ip_service_result: create_ip_service_result(),
-        domain_service_results: Vec::<DomainResult>::new(),
+        domain_service_results: HashMap::<String, DomainResult>::new(),
     }
 }
 
 /*
     part of top-level function series
 */
-pub fn load_or_create_results(config: &Config) -> Option<UpdateIpResults> {
-    let json_as_str = match File::open(&config.results_filepath) {
+pub async fn load_or_create_results(config: &Config) -> Option<UpdateIpResults> {
+    let json_as_str = match fs::read_to_string(&config.results_filepath).await {
         Ok(r) => r,
-        Err(e) => return None,
+        Err(_e) => return Some(create_results()),
     };
 
-    match serde_json::from_reader(&json_as_str) {
+    match serde_json::from_str(&json_as_str) {
         Ok(j) => Some(j),
-        Err(e) => return Some(create_results()),
+        Err(_e) => return Some(create_results()),
     }
 }
 
 /*
     part of top-level function series
 */
-pub fn write_to_file(
+pub async fn write_to_file(
     results: UpdateIpResults,
     config: &Config,
-) -> Result<UpdateIpResults, std::io::Error> {
-    let file = match File::create(&config.results_filepath) {
+) -> Result<UpdateIpResults, String> {
+    let json_str = match serde_json::to_string_pretty(&results) {
         Ok(f) => f,
-        Err(e) => return Err(e),
+        Err(e) => return Err(e.to_string()),
     };
-    let mut writer = BufWriter::new(file);
-    // serde_json::to_writer(&mut writer, &results);
-    let _ = serde_json::to_writer_pretty(&mut writer, &results);
-    let _ = writer.flush();
+
+    let _ = fs::write(&config.results_filepath, json_str).await;
 
     Ok(results)
-}
-
-pub fn create_retry_set(results: &UpdateIpResults) -> HashSet<String> {
-	let mut retry_set = HashSet::<String>::new();
-	
-	for domain_result in &results.domain_service_results {
-		if domain_result.retry {
-			retry_set.insert(domain_result.domain.clone());
-		}
-	}
-
-	retry_set
 }

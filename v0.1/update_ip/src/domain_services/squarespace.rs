@@ -1,15 +1,20 @@
 use bytes::Bytes;
 use http::Request;
 use http_body_util::Empty;
+use std::collections::HashMap;
 use std::collections::HashSet;
 
-use crate::type_flyweight::DomainResult;
-use crate::type_flyweight::Squarespace;
-use crate::type_flyweight::UpdateIpResults;
+use base64::{engine::general_purpose, Engine as _};
+
 use crate::config::Config;
+use crate::requests;
+use crate::results;
+use crate::type_flyweight::{DomainResult, Squarespace, UpdateIpResults};
 
 /*
 https://support.google.com/domains/answer/6147083?hl=en
+
+requests must have a agent user
 
 Response 	Status 	Description
 good {user’s IP address} 	Success 	The update was successful. You should not attempt another update until your IP address changes.
@@ -24,111 +29,113 @@ conflict A
 conflict AAAA 	Error 	A custom A or AAAA resource record conflicts with the update. Delete the indicated resource record within the DNS settings page and try the update again.
 */
 
+const SERVICE_URI_HOST: &str = "domains.google.com";
+const SERVICE_URI_AUTHORITY: &str = "domains.google.com";
+const CLIENT_HEADER_VALUE: &str = "Chrome/41.0 brian.t.vann@gmail.com";
+
 // must return results
 pub async fn update_domains(
-    mut domain_results: Vec<DomainResult>,
+    mut domain_results: HashMap<String, DomainResult>,
     prev_results: &UpdateIpResults,
     config: &Config,
-    retry_set: &HashSet<String>,
-) -> Vec<DomainResult> {
-		// don't fetch results if there are no squarespace domains
+) -> HashMap<String, DomainResult> {
+    // don't fetch results if there are no squarespace domains
     let domains = match &config.domain_services.squarespace {
-    	Some(d) => d,
-    	_ => return domain_results,
+        Some(d) => d,
+        _ => return domain_results,
     };
-    
+
     // don't fetch if there isn't an address
     let address = match &prev_results.ip_service_result.address {
-    	Some(d) => d,
-    	_ => return domain_results,
+        Some(d) => d,
+        _ => return domain_results,
     };
-    
-    let address_updated = prev_results.ip_service_result.address_changed;
 
-		println!("iterating through domains");
+    let address_updated = prev_results.ip_service_result.address_changed;
 
     for domain in domains {
         // do not update domain if address didn't change
-        // and 
-    		println!("{:?}", domain);
-        if !address_updated && !retry_set.contains(&domain.hostname) {
+        // and current domain is not in retry set
+        let prev_domain_result = prev_results.domain_service_results.get(&domain.hostname);
+
+        // someone could add or remove a domain from the config file between updates
+        // if new / not in previous results, "retry"
+        // if prev results existed get retry and critical
+        let mut retry = true;
+        if let Some(prev_result) = prev_domain_result {
+            retry = prev_result.retry;
+        }
+
+        // do not update if address has not changed and no retries
+        if !address_updated && !retry {
             continue;
         }
-    		println!("made it past the addition sieve");
-        let mut domain_result = DomainResult {
-            domain: domain.hostname.clone(),
-            retry: false,
-            errors: Vec::<String>::new(),
-            response: None,
-        };
 
-        let uri_str = get_uri(domain, address);
+        let uri_str = get_https_dyndns2_uri(
+            &domain.hostname,
+            &address,
+        );
 
-        // requests must have a agent user
-        let _request = match Request::builder()
+        let auth_str = domain.username.to_string() + ":" + &domain.password;
+
+        let mut domain_result = results::create_domain_result(&domain.hostname);
+        let auth = general_purpose::STANDARD.encode(&auth_str.as_bytes());
+        let auth_value = "Basic ".to_string() + &auth;
+
+        // build request
+        let request = match Request::builder()
             .uri(uri_str)
-            .header(hyper::header::HOST, "domains.google.com:443")
-            .header(hyper::header::USER_AGENT, "hyper/1.0 rust-client")
+            .header(hyper::header::USER_AGENT, CLIENT_HEADER_VALUE)
+            .header(hyper::header::AUTHORIZATION, auth_value)
             .body(Empty::<Bytes>::new())
         {
             Ok(s) => Some(s),
-            _ => {
-                // log error in results, failed to make a string
-                domain_result
-                    .errors
-                    .push("could not build squarespace dns request".to_string());
+            Err(e) => {
+                domain_result.errors.push(e.to_string());
                 None
             }
         };
 
-        /*
-        let mut res = None;
+        // if request was successful, get response
+        let mut response = None;
         if let Some(req) = request {
-            match requests::request_http1_tls_response(req).await {
-                Ok(r) => res = Some(r),
-                _ => {
-                    domain_result
-                        .errors
-                        .push("squarespace request failed".to_string());
+            response = match requests::request_http1_tls_response(req).await {
+                Ok(r) => Some(r),
+                Err(e) => {
+                    domain_result.retry = true;
+                    domain_result.errors.push(e.to_string());
+                    None
                 }
             };
         }
 
-        if let Some(res) = res {
+        // if response was successful, get jsonable struct
+        if let Some(res) = response {
             match requests::convert_response_to_json(res).await {
                 Ok(r) => domain_result.response = Some(r),
-                _ => {
-                    domain_result
-                        .errors
-                        .push("could not create jsonable response".to_string());
-                    return Err(());
-                }
-            };
+                Err(e) => domain_result.errors.push(e.to_string()),
+            }
         };
 
-        // only valid retries are
-        // - request failed
-        // - service returns "911"
+        // if jsonable was successful, calculate retry
+        //	only valid retries are
+        //		- request failed
+        //		- service returns "911"
         if let Some(response) = &domain_result.response {
-            domain_result.retry = response.body.starts_with(&"911".to_string())
-                || response.status_code != http::status::StatusCode::OK;
-        }
+            domain_result.retry = response.status_code != http::status::StatusCode::OK
+                || response.body.starts_with(&"911".to_string());
+        };
 
-
-        */
-        domain_results.push(domain_result);
+        // finally push domain_results into
+        domain_results.insert(domain.hostname.clone(), domain_result);
     }
 
     domain_results
 }
 
-fn get_uri(domain: &Squarespace, ip_addr: &str) -> String {
-    "https://".to_string()
-        + &domain.username
-        + ":"
-        + &domain.password
-        + "@domains.google.com/nic/update?hostname="
-        + &domain.hostname
-        + "&myip="
-        + &ip_addr
+fn get_https_dyndns2_uri(
+    hostname: &str,
+  	ip_addr: &str,
+) -> String {
+    "https://domains.google.com/nic/update?hostname=".to_string() + hostname + "&myip=" + ip_addr
 }

@@ -1,9 +1,8 @@
-use std::fmt;
-use std::fs::File;
-use std::path;
-
 use serde::{Deserialize, Serialize};
 use serde_json;
+use std::fmt;
+use std::path;
+use tokio::fs;
 
 use crate::type_flyweight::DomainServices;
 use crate::type_flyweight::IpServices;
@@ -46,12 +45,12 @@ pub async fn from_filepath(filepath: &path::PathBuf) -> Result<Config, ConfigErr
         _ => return Err(ConfigError::GenericError(PARENT_NOT_FOUND_ERR)),
     };
 
-    let json_reader = match File::open(&config_pathbuff) {
+    let config_json = match fs::read_to_string(&config_pathbuff).await {
         Ok(r) => r,
         Err(e) => return Err(ConfigError::IoError(e)),
     };
 
-    let mut config: Config = match serde_json::from_reader(&json_reader) {
+    let mut config: Config = match serde_json::from_str(&config_json) {
         Ok(j) => j,
         Err(e) => return Err(ConfigError::JsonError(e)),
     };

@@ -9,7 +9,7 @@ use hyper::body::Incoming;
 use hyper::client::conn::http1;
 use hyper_util::rt::TokioIo;
 use native_tls::TlsConnector;
-use std::time::{SystemTime, SystemTimeError};
+use std::time::SystemTime;
 use tokio::net::TcpStream;
 
 use crate::type_flyweight::ResponseJson;
@@ -27,18 +27,18 @@ use crate::type_flyweight::ResponseJson;
 
 pub async fn request_http1_tls_response(
     req: Request<Empty<Bytes>>,
-) -> Result<Response<Incoming>, ()> {
+) -> Result<Response<Incoming>, String> {
     let (host, addr) = match create_host_and_authority(&req) {
         Some(stream) => stream,
-        _ => return Err(()),
+        _ => return Err("failed to get host and address from uri".to_string()),
     };
     let io = match create_tls_stream(&host, &addr).await {
-        Some(stream) => stream,
-        _ => return Err(()),
+        Ok(stream) => stream,
+        Err(e) => return Err(e),
     };
     let (mut sender, conn) = match http1::handshake(io).await {
         Ok(handshake) => handshake,
-        _ => return Err(()),
+        Err(e) => return Err(e.to_string()),
     };
     tokio::task::spawn(async move {
         if let Err(_err) = conn.await { /* log connection error */ }
@@ -46,7 +46,7 @@ pub async fn request_http1_tls_response(
 
     let res = match sender.send_request(req).await {
         Ok(res) => res,
-        _ => return Err(()),
+        Err(e) => return Err(e.to_string()),
     };
 
     Ok(res)
@@ -57,25 +57,25 @@ pub async fn request_http1_tls_response(
 async fn create_tls_stream(
     host: &str,
     addr: &str,
-) -> Option<TokioIo<tokio_native_tls::TlsStream<TcpStream>>> {
+) -> Result<TokioIo<tokio_native_tls::TlsStream<TcpStream>>, String> {
     let tls_connector = match TlsConnector::new() {
         Ok(cx) => tokio_native_tls::TlsConnector::from(cx),
-        _ => return None,
+        Err(e) => return Err(e.to_string()),
     };
 
     let client_stream = match TcpStream::connect(addr).await {
         Ok(s) => s,
         Err(e) => {
-            return None;
+            return Err(e.to_string());
         }
     };
 
     let tls_stream = match tls_connector.connect(host, client_stream).await {
         Ok(s) => TokioIo::new(s),
-        _ => return None,
+        Err(e) => return Err(e.to_string()),
     };
 
-    Some(tls_stream)
+    Ok(tls_stream)
 }
 
 fn create_host_and_authority(req: &Request<Empty<Bytes>>) -> Option<(&str, String)> {
@@ -85,10 +85,20 @@ fn create_host_and_authority(req: &Request<Empty<Bytes>>) -> Option<(&str, Strin
         _ => return None,
     };
 
-    let authority = match req.uri().authority() {
-        Some(a) => a.clone().as_str().to_string().clone() + ":" + "443",
-        _ => return None,
+    let scheme = match req.uri().scheme() {
+        Some(s) => s.as_str(),
+        _ => http::uri::Scheme::HTTPS.as_str(),
     };
+
+    let port = match req.uri().port() {
+        Some(p) => p.to_string(),
+        _ => match scheme {
+            "http" => "80".to_string(),
+            _ => "443".to_string(),
+        },
+    };
+
+    let authority = host.to_string() + ":" + &port;
 
     Some((host, authority))
 }
@@ -157,16 +167,16 @@ pub fn get_timestamp() -> Result<u128, String> {
 }
 
 pub async fn convert_response_to_json(res: Response<Incoming>) -> Result<ResponseJson, String> {
+    let timestamp = match get_timestamp() {
+        Ok(n) => n,
+        Err(e) => return Err(e.to_string()),
+    };
+
     let headers = get_headers(&res);
     let status = res.status().as_u16();
 
     let body_str = match response_body_to_string(res).await {
         Ok(r) => r,
-        Err(e) => return Err(e.to_string()),
-    };
-
-    let timestamp = match get_timestamp() {
-        Ok(n) => n,
         Err(e) => return Err(e.to_string()),
     };
 
@@ -176,4 +186,19 @@ pub async fn convert_response_to_json(res: Response<Incoming>) -> Result<Respons
         headers: headers,
         timestamp: timestamp,
     })
+}
+
+pub fn get_https_dyndns2_uri(
+    service_domain: &str,
+    ip_addr: &str,
+    hostname: &str,
+    username: &str,
+    password: &str,
+) -> String {
+    "https://".to_string()
+        + service_domain
+        + "/nic/update?hostname="
+        + hostname
+        + "&myip="
+        + ip_addr
 }

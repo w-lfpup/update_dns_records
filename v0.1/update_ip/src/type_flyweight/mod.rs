@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 // beware of hydra
 pub type IpServices = Vec<(String, String)>;
@@ -22,7 +23,7 @@ pub struct IpServiceResult {
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct DomainResult {
-    pub domain: String,
+    pub hostname: String,
     pub retry: bool,
     pub errors: Vec<String>,
     pub response: Option<ResponseJson>,
@@ -31,7 +32,7 @@ pub struct DomainResult {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct UpdateIpResults {
     pub ip_service_result: IpServiceResult,
-    pub domain_service_results: Vec<DomainResult>,
+    pub domain_service_results: HashMap<String, DomainResult>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -47,4 +48,3 @@ pub struct Squarespace {
 pub struct DomainServices {
     pub squarespace: Option<Vec<Squarespace>>,
 }
-
