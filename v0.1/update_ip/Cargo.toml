@@ -17,6 +17,7 @@ http = "1.0.0"
 hyper = { version = "1", features = ["full"] }
 http-body-util = "0.1"
 rand = "0.8.5"
+base64 = { version = "0.21" }
 
 ## stretch
 #		import support conditionally based on features

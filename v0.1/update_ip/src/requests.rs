@@ -196,10 +196,6 @@ pub fn get_https_dyndns2_uri(
     password: &str,
 ) -> String {
     "https://".to_string()
-        + username
-        + ":"
-        + password
-        + "@"
         + service_domain
         + "/nic/update?hostname="
         + hostname

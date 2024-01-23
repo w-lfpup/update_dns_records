@@ -4,6 +4,9 @@ use http_body_util::Empty;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
+use base64;
+use base64::{engine::general_purpose, Engine as _};
+
 use crate::config::Config;
 use crate::requests;
 use crate::results;
@@ -28,8 +31,8 @@ conflict AAAA 	Error 	A custom A or AAAA resource record conflicts with the upda
 */
 
 const SERVICE_URI_HOST: &str = "domains.google.com";
-const SERVICE_URI_AUTHORITY: &str = "domains.google.com:443";
-const CLIENT_HEADER_VALUE: &str = "hyper/1.0 rust-client";
+const SERVICE_URI_AUTHORITY: &str = "domains.google.com";
+const CLIENT_HEADER_VALUE: &str = "Chrome/41.0 brian.t.vann@gmail.com";
 
 // must return results
 pub async fn update_domains(
@@ -69,7 +72,7 @@ pub async fn update_domains(
             continue;
         }
 
-        let uri_str = requests::get_https_dyndns2_uri(
+        let uri_str = get_https_dyndns2_uri(
             SERVICE_URI_HOST,
             &address,
             &domain.hostname,
@@ -77,13 +80,17 @@ pub async fn update_domains(
             &domain.password,
         );
 
+        let auth_str = domain.username.to_string() + ":" + &domain.password;
+
         let mut domain_result = results::create_domain_result(&domain.hostname);
+        let auth = general_purpose::STANDARD.encode(&auth_str.as_bytes());
+        let auth_value = "Basic ".to_string() + &auth;
 
         // build request
         let request = match Request::builder()
             .uri(uri_str)
-            .header(hyper::header::HOST, SERVICE_URI_AUTHORITY)
             .header(hyper::header::USER_AGENT, CLIENT_HEADER_VALUE)
+            .header(hyper::header::AUTHORIZATION, auth_value)
             .body(Empty::<Bytes>::new())
         {
             Ok(s) => Some(s),
@@ -128,4 +135,14 @@ pub async fn update_domains(
     }
 
     domain_results
+}
+
+fn get_https_dyndns2_uri(
+    service_domain: &str,
+    ip_addr: &str,
+    hostname: &str,
+    username: &str,
+    password: &str,
+) -> String {
+    "https://domains.google.com/nic/update?hostname=".to_string() + hostname + "&myip=" + ip_addr
 }

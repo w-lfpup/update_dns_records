@@ -40,7 +40,7 @@ fn create_results() -> UpdateIpResults {
 pub async fn load_or_create_results(config: &Config) -> Option<UpdateIpResults> {
     let json_as_str = match fs::read_to_string(&config.results_filepath).await {
         Ok(r) => r,
-        Err(_e) => return None,
+        Err(_e) => return Some(create_results()),
     };
 
     match serde_json::from_str(&json_as_str) {
