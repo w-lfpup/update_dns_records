@@ -56,8 +56,8 @@ pub async fn update_domains(
     for domain in domains {
         // do not update domain if address didn't change
         // and current domain is not in retry set
-        let prev_domain_result = domain_results.get(&domain.hostname);
 
+        let prev_domain_result = prev_results.domain_service_results.get(&domain.hostname);
         // someone could add or remove a domain from the config file between updates
         // if new / not in previous results, "retry"
         // if prev results existed get retry and critical
