@@ -4,7 +4,6 @@ use http_body_util::Empty;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-use base64;
 use base64::{engine::general_purpose, Engine as _};
 
 use crate::config::Config;
@@ -73,11 +72,8 @@ pub async fn update_domains(
         }
 
         let uri_str = get_https_dyndns2_uri(
-            SERVICE_URI_HOST,
-            &address,
             &domain.hostname,
-            &domain.username,
-            &domain.password,
+            &address,
         );
 
         let auth_str = domain.username.to_string() + ":" + &domain.password;
@@ -138,11 +134,8 @@ pub async fn update_domains(
 }
 
 fn get_https_dyndns2_uri(
-    service_domain: &str,
-    ip_addr: &str,
     hostname: &str,
-    username: &str,
-    password: &str,
+  	ip_addr: &str,
 ) -> String {
     "https://domains.google.com/nic/update?hostname=".to_string() + hostname + "&myip=" + ip_addr
 }
