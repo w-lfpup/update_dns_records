@@ -8,7 +8,6 @@ use crate::type_flyweight::DomainServices;
 use crate::type_flyweight::IpServices;
 
 const PARENT_NOT_FOUND_ERR: &str = "parent directory of config not found";
-const FILE_IS_NOT_FILE_ERR: &str = "config.results_filepath is not a file";
 
 pub enum ConfigError<'a> {
     IoError(std::io::Error),

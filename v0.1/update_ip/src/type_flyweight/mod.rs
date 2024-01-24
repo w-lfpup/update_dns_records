@@ -24,7 +24,6 @@ pub struct IpServiceResult {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct DomainResult {
     pub hostname: String,
-    pub retry: bool,
     pub errors: Vec<String>,
     pub response: Option<ResponseJson>,
 }

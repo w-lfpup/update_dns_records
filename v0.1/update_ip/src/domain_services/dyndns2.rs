@@ -2,23 +2,21 @@ use bytes::Bytes;
 use http::Request;
 use http_body_util::Empty;
 use std::collections::HashMap;
-use std::collections::HashSet;
 
 use base64::{engine::general_purpose, Engine as _};
 
 use crate::config::Config;
 use crate::requests;
 use crate::results;
-use crate::type_flyweight::{DomainResult, dyndns2, UpdateIpResults};
+use crate::type_flyweight::{DomainResult, UpdateIpResults};
 
 /*
-	Implements a subset of the dyndns2 protocol.
-	
-	https://help.dyn.com/remote-access-api/return-codes/
-	Not all responses are implemented but all responses are recorded.
-	Only the 911 warrants a retry
-*/
+    Implements a subset of the dyndns2 protocol.
 
+    https://help.dyn.com/remote-access-api/return-codes/
+    Not all responses are implemented but all responses are recorded.
+    Only the 911 warrants a retry
+*/
 
 /*
 https://support.google.com/domains/answer/6147083?hl=en
@@ -38,8 +36,6 @@ conflict A
 conflict AAAA 	Error 	A custom A or AAAA resource record conflicts with the update. Delete the indicated resource record within the DNS settings page and try the update again.
 */
 
-const SERVICE_URI_HOST: &str = "domains.google.com";
-const SERVICE_URI_AUTHORITY: &str = "domains.google.com";
 const CLIENT_HEADER_VALUE: &str = "hyper/1.0 rust-client";
 // const CLIENT_HEADER_VALUE: &str = "Chrome/41.0 brian.t.vann@gmail.com";
 
@@ -71,27 +67,28 @@ pub async fn update_domains(
         // someone could add or remove a domain from the config file between updates
         // if new / not in previous results, "retry"
         // if prev results existed get retry and critical
+        // if jsonable was successful, calculate retry
+        //	only valid retries are
+        //		- request failed
+        //		- service returns "911"
+
         let mut retry = true;
         if let Some(prev_result) = prev_domain_result {
-        	if let Some(response) = prev_result {
-            retry = response.body.starts_with(&"911".to_string());
-        	}
+            if let Some(response) = &prev_result.response {
+                retry = response.body.starts_with(&"911".to_string());
+            }
         }
 
         // do not update if address has not changed and no retries
         if !address_updated && !retry {
-        		// add old result to new result
-		        if let Some(prev_result) = prev_domain_result {
-		        	domain_results.insert(domain.hostname.clone(), prev_result.clone());
-		        }
+            // add old result to new result
+            if let Some(prev_result) = prev_domain_result {
+                domain_results.insert(domain.hostname.clone(), prev_result.clone());
+            }
             continue;
         }
 
-        let uri_str = get_https_dyndns2_uri(
-        		&domain.domain,
-            &domain.hostname,
-            &address,
-        );
+        let uri_str = get_https_dyndns2_uri(&domain.domain, &domain.hostname, &address);
 
         let auth_str = domain.username.to_string() + ":" + &domain.password;
 
@@ -119,7 +116,6 @@ pub async fn update_domains(
             response = match requests::request_http1_tls_response(req).await {
                 Ok(r) => Some(r),
                 Err(e) => {
-                    domain_result.retry = true;
                     domain_result.errors.push(e.to_string());
                     None
                 }
@@ -134,14 +130,6 @@ pub async fn update_domains(
             }
         };
 
-        // if jsonable was successful, calculate retry
-        //	only valid retries are
-        //		- request failed
-        //		- service returns "911"
-        if let Some(response) = &domain_result.response {
-            domain_result.retry = response.body.starts_with(&"911".to_string());
-        };
-
         // finally push domain_results into
         domain_results.insert(domain.hostname.clone(), domain_result);
     }
@@ -149,10 +137,11 @@ pub async fn update_domains(
     domain_results
 }
 
-fn get_https_dyndns2_uri(
-    domain_service: &str,
-    hostname: &str,
-  	ip_addr: &str,
-) -> String {
-    "https://" + domain_service + "/nic/update?hostname=".to_string() + hostname + "&myip=" + ip_addr
+fn get_https_dyndns2_uri(domain_service: &str, hostname: &str, ip_addr: &str) -> String {
+    "https://".to_string()
+        + domain_service
+        + "/nic/update?hostname="
+        + hostname
+        + "&myip="
+        + ip_addr
 }

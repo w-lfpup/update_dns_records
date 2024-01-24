@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use crate::config::Config;
-use crate::results;
 use crate::type_flyweight::{DomainResult, UpdateIpResults};
 
 mod dyndns2;
