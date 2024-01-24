@@ -12,7 +12,7 @@ use native_tls::TlsConnector;
 use std::time::SystemTime;
 use tokio::net::TcpStream;
 
-https://help.dyn.com/remote-access-api/perform-update/
+// https://help.dyn.com/remote-access-api/perform-update/
 
 use crate::type_flyweight::ResponseJson;
 

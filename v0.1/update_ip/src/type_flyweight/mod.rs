@@ -42,9 +42,18 @@ pub struct Squarespace {
     pub password: String,
 }
 
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct Dyndns2 {
+    pub domain: String,
+    pub hostname: String,
+    pub username: String,
+    pub password: String,
+}
+
 // add domain services here
 // beware of hydra
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct DomainServices {
+    pub dyndns2: Option<Vec<Dyndns2>>,
     pub squarespace: Option<Vec<Squarespace>>,
 }

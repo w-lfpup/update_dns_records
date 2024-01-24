@@ -9,7 +9,7 @@ use base64::{engine::general_purpose, Engine as _};
 use crate::config::Config;
 use crate::requests;
 use crate::results;
-use crate::type_flyweight::{DomainResult, Squarespace, UpdateIpResults};
+use crate::type_flyweight::{DomainResult, dyndns2, UpdateIpResults};
 
 /*
 https://support.google.com/domains/answer/6147083?hl=en
@@ -39,8 +39,8 @@ pub async fn update_domains(
     prev_results: &UpdateIpResults,
     config: &Config,
 ) -> HashMap<String, DomainResult> {
-    // don't fetch results if there are no squarespace domains
-    let domains = match &config.domain_services.squarespace {
+    // don't fetch results if there are no dyndns2 domains
+    let domains = match &config.domain_services.dyndns2 {
         Some(d) => d,
         _ => return domain_results,
     };
@@ -68,14 +68,17 @@ pub async fn update_domains(
 
         // do not update if address has not changed and no retries
         if !address_updated && !retry {
-            // add old result to new result
-            if let Some(prev_result) = prev_domain_result {
-                domain_results.insert(domain.hostname.clone(), prev_result.clone());
-            }
+        		// add old result to new result
+		        if let Some(prev_result) = prev_domain_result {
+		        	domain_results.insert(domain.hostname.clone(), prev_result.clone());
+		        }
             continue;
         }
 
-        let uri_str = get_https_dyndns2_uri(&domain.hostname, &address);
+        let uri_str = get_https_dyndns2_uri(
+            &domain.hostname,
+            &address,
+        );
 
         let auth_str = domain.username.to_string() + ":" + &domain.password;
 
@@ -133,6 +136,9 @@ pub async fn update_domains(
     domain_results
 }
 
-fn get_https_dyndns2_uri(hostname: &str, ip_addr: &str) -> String {
+fn get_https_dyndns2_uri(
+    hostname: &str,
+  	ip_addr: &str,
+) -> String {
     "https://domains.google.com/nic/update?hostname=".to_string() + hostname + "&myip=" + ip_addr
 }
