@@ -167,7 +167,7 @@ pub fn get_timestamp() -> Result<u128, String> {
     }
 }
 
-pub async fn convert_response_to_json(res: Response<Incoming>) -> Result<ResponseJson, String> {
+pub async fn convert_response_to_json_struct(res: Response<Incoming>) -> Result<ResponseJson, String> {
     let timestamp = match get_timestamp() {
         Ok(n) => n,
         Err(e) => return Err(e),

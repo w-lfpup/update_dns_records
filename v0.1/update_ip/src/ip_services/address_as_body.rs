@@ -30,7 +30,7 @@ pub async fn request_address_as_response_body(
     };
 
     // track response
-    ip_service_result.response = match requests::convert_response_to_json(response).await {
+    ip_service_result.response = match requests::convert_response_to_json_struct(response).await {
         Ok(j) => Some(j),
         _ => {
             ip_service_result

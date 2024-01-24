@@ -48,3 +48,36 @@ pub struct Dyndns2 {
 pub struct DomainServices {
     pub dyndns2: Option<Vec<Dyndns2>>,
 }
+
+impl IpServiceResult {
+	pub fn new() -> IpServiceResult {
+	    IpServiceResult {
+        address: None,
+        service: None,
+        address_changed: false,
+        errors: Vec::new(),
+        response: None,
+    }
+	}
+}
+
+impl DomainResult {
+	pub fn new (hostname: &String) -> DomainResult {
+	    DomainResult {
+        hostname: hostname.clone(),
+        errors: Vec::<String>::new(),
+        response: None,
+    }
+	}
+}
+
+
+impl UpdateIpResults {
+	pub fn new() -> UpdateIpResults {
+    UpdateIpResults {
+        ip_service_result: IpServiceResult::new(),
+        domain_service_results: HashMap::<String, DomainResult>::new(),
+    }
+	}
+}
+

@@ -20,8 +20,6 @@ use crate::type_flyweight::{DomainResult, Dyndns2, UpdateIpResults};
 */
 
 const CLIENT_HEADER_VALUE: &str = "hyper/1.0 rust-client";
-// const CLIENT_HEADER_VALUE: &str = "Chrome/41.0 brian.t.vann@gmail.com";
-
 
 // must return results
 pub async fn update_domains(
@@ -39,7 +37,7 @@ pub async fn update_domains(
         // someone could add or remove a domain from the config file between updates
         let prev_domain_result = prev_results.domain_service_results.get(&domain.hostname);
 
-				// if address did not change and there's no retry
+				// if address did not change and there's no retry, save previous domain_result
         if !prev_results.ip_service_result.address_changed && !should_retry(prev_domain_result) {
         	if let Some(prev_result) = prev_domain_result {
         		domain_results.insert(domain.hostname.clone(), prev_result.clone());
@@ -63,32 +61,13 @@ pub async fn update_domains(
         };
 
 				// build domain result
-        let mut domain_result = results::create_domain_result(&domain.hostname);
+        let mut domain_result = DomainResult::new(&domain.hostname);
 				domain_result = create_build_result(domain_result, domain, &address).await;
 
         domain_results.insert(domain.hostname.clone(), domain_result);
     }
 
     domain_results
-}
-
-fn get_https_dyndns2_req(
-    domain: &Dyndns2,
-    ip_addr: &str,
-) -> Result<Request<Empty<Bytes>>, http::Error> {
-    let uri_str = domain.service_uri.clone() + "?hostname=" + &domain.hostname + "&myip=" + ip_addr;
-    let auth_str = domain.username.to_string() + ":" + &domain.password;
-    let auth = general_purpose::STANDARD.encode(&auth_str.as_bytes());
-    let auth_value = "Basic ".to_string() + &auth;
-    match Request::builder()
-        .uri(uri_str)
-        .header(hyper::header::USER_AGENT, CLIENT_HEADER_VALUE)
-        .header(hyper::header::AUTHORIZATION, auth_value)
-        .body(Empty::<Bytes>::new())
-    {
-        Ok(req) => Ok(req),
-        Err(e) => Err(e),
-    }
 }
 
 //	only valid retries are
@@ -130,7 +109,7 @@ async fn create_build_result(mut domain_result: DomainResult, domain: &Dyndns2, 
   // create json-able struct from response
   // add to domain result
   if let Some(res) = response {
-      match requests::convert_response_to_json(res).await {
+      match requests::convert_response_to_json_struct(res).await {
           Ok(r) => domain_result.response = Some(r),
           Err(e) => domain_result.errors.push(e.to_string()),
       }
@@ -139,3 +118,21 @@ async fn create_build_result(mut domain_result: DomainResult, domain: &Dyndns2, 
   domain_result
 }
 
+fn get_https_dyndns2_req(
+    domain: &Dyndns2,
+    ip_addr: &str,
+) -> Result<Request<Empty<Bytes>>, http::Error> {
+    let uri_str = domain.service_uri.clone() + "?hostname=" + &domain.hostname + "&myip=" + ip_addr;
+    let auth_str = domain.username.to_string() + ":" + &domain.password;
+    let auth = general_purpose::STANDARD.encode(&auth_str.as_bytes());
+    let auth_value = "Basic ".to_string() + &auth;
+    match Request::builder()
+        .uri(uri_str)
+        .header(hyper::header::USER_AGENT, CLIENT_HEADER_VALUE)
+        .header(hyper::header::AUTHORIZATION, auth_value)
+        .body(Empty::<Bytes>::new())
+    {
+        Ok(req) => Ok(req),
+        Err(e) => Err(e),
+    }
+}
