@@ -3,9 +3,7 @@ use tokio::fs;
 
 // can use after mod declaration
 use crate::config::Config;
-use crate::type_flyweight::DomainResult;
-use crate::type_flyweight::IpServiceResult;
-use crate::type_flyweight::UpdateIpResults;
+use crate::type_flyweight::{DomainResult, IpServiceResult, UpdateIpResults};
 
 // no service initially
 pub fn create_ip_service_result() -> IpServiceResult {
@@ -33,9 +31,6 @@ fn create_results() -> UpdateIpResults {
     }
 }
 
-/*
-    part of top-level function series
-*/
 pub async fn load_or_create_results(config: &Config) -> Option<UpdateIpResults> {
     let json_as_str = match fs::read_to_string(&config.results_filepath).await {
         Ok(r) => r,
@@ -48,9 +43,6 @@ pub async fn load_or_create_results(config: &Config) -> Option<UpdateIpResults> 
     }
 }
 
-/*
-    part of top-level function series
-*/
 pub async fn write_to_file(
     results: UpdateIpResults,
     config: &Config,

@@ -5,7 +5,6 @@ use crate::type_flyweight::{DomainResult, UpdateIpResults};
 
 mod dyndns2;
 
-// must update and return results
 pub async fn update_domains(mut results: UpdateIpResults, config: &Config) -> UpdateIpResults {
     // bail early when no address is provided
     // keep previous results

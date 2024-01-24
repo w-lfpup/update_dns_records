@@ -1,0 +1,38 @@
+{
+  "ip_service_result": {
+    "address": "24.5.61.76",
+    "service": "https://checkip.amazonaws.com/",
+    "address_changed": true,
+    "errors": [],
+    "response": {
+      "status_code": 200,
+      "body": "24.5.61.76",
+      "headers": [
+        [
+          "date",
+          "Wed, 24 Jan 2024 05:56:21 GMT"
+        ],
+        [
+          "server",
+          "Not Available"
+        ],
+        [
+          "content-length",
+          "11"
+        ],
+        [
+          "connection",
+          "keep-alive"
+        ]
+      ],
+      "timestamp": 1706075781503
+    }
+  },
+  "domain_service_results": {
+    "something.com": {
+      "hostname": "something.com",
+      "errors": [],
+      "response": null
+    }
+  }
+}

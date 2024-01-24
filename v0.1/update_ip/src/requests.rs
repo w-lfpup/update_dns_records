@@ -1,14 +1,12 @@
-use std::io;
-
 use bytes::Buf;
 use bytes::Bytes;
-use http::Request;
-use http::Response;
 use http_body_util::{BodyExt, Empty};
+use http::{Request, Response};
 use hyper::body::Incoming;
 use hyper::client::conn::http1;
 use hyper_util::rt::TokioIo;
 use native_tls::TlsConnector;
+use std::io;
 use std::time::SystemTime;
 use tokio::net::TcpStream;
 

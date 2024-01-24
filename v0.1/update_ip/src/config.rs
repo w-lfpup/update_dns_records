@@ -4,8 +4,7 @@ use std::fmt;
 use std::path;
 use tokio::fs;
 
-use crate::type_flyweight::DomainServices;
-use crate::type_flyweight::IpServices;
+use crate::type_flyweight::{DomainServices, IpServices};
 
 const PARENT_NOT_FOUND_ERR: &str = "parent directory of config not found";
 

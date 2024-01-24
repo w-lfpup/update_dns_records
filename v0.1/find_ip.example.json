@@ -5,7 +5,8 @@
 		["https://domains.google.com/checkip", "address_as_body"]
 	],
 	"domain_services": {
-		"squarespace": [{
+		"dyndns2": [{
+				"domain": "domains.google.com/nic/update",
 				"hostname": "something.com",
 				"username": "...",
 				"password": "..."
