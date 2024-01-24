@@ -36,7 +36,7 @@ pub struct UpdateIpResults {
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Dyndns2 {
-    pub domain: String,
+    pub service_uri: String,
     pub hostname: String,
     pub username: String,
     pub password: String,

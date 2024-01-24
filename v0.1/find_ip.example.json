@@ -6,7 +6,7 @@
 	],
 	"domain_services": {
 		"dyndns2": [{
-				"domain": "domains.google.com/nic/update",
+				"service_uri": "https://domains.google.com/nic/update",
 				"hostname": "something.com",
 				"username": "...",
 				"password": "..."

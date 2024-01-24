@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use crate::config::Config;
 use crate::requests;
 use crate::results;
-use crate::type_flyweight::{DomainResult, UpdateIpResults};
+use crate::type_flyweight::{DomainResult, UpdateIpResults, Dyndns2};
 
 /*
     Implements a subset of the dyndns2 protocol.
@@ -45,10 +45,20 @@ pub async fn update_domains(
         let mut retry = true;
         if let Some(prev_result) = prev_domain_result {
             if let Some(response) = &prev_result.response {
-                retry = response.body.starts_with(&"911".to_string());
+                retry = response.body.starts_with("911");
             }
         }
+        
+        let _ = match (prev_results.ip_service_result.address_changed, retry, prev_domain_result) {
+        	(false, false, Some(prev_result)) => {
+            domain_results.insert(domain.hostname.clone(), prev_result.clone());
+            continue;
+        	},
+        	(false, false, None) => continue,
+        	_ => {},
+      	};
 
+				/*
         // do not update if address has not changed and no retries
         if !prev_results.ip_service_result.address_changed && !retry {
             // add old result to new result
@@ -57,6 +67,7 @@ pub async fn update_domains(
             }
             continue;
         }
+        */
         // if no address address, add previous results
         let address = match &prev_results.ip_service_result.address {
 			    Some(d) => d,
@@ -68,7 +79,7 @@ pub async fn update_domains(
 					}
 				};
 
-        let uri_str = get_https_dyndns2_uri(&domain.domain, &domain.hostname, &address);
+        let uri_str = get_https_dyndns2_uri(&domain, &address);
         let auth_str = domain.username.to_string() + ":" + &domain.password;
         let auth = general_purpose::STANDARD.encode(&auth_str.as_bytes());
         let auth_value = "Basic ".to_string() + &auth;
@@ -88,7 +99,7 @@ pub async fn update_domains(
             }
         };
 
-        // if request was successful, get response
+        // get response
         let mut response = None;
         /*
         if let Some(req) = request {
@@ -102,7 +113,7 @@ pub async fn update_domains(
         }
         */
 
-        // if response was successful, get jsonable struct
+        // create json-able struct from response
         if let Some(res) = response {
             match requests::convert_response_to_json(res).await {
                 Ok(r) => domain_result.response = Some(r),
@@ -110,18 +121,17 @@ pub async fn update_domains(
             }
         };
 
-        // finally push domain_results into
+        // add domain result to domain result map
         domain_results.insert(domain.hostname.clone(), domain_result);
     }
 
     domain_results
 }
 
-fn get_https_dyndns2_uri(domain_service: &str, hostname: &str, ip_addr: &str) -> String {
-    "https://".to_string()
-        + domain_service
-        + "/nic/update?hostname="
-        + hostname
+fn get_https_dyndns2_uri(domain: &Dyndns2, ip_addr: &str) -> String {
+        domain.service_uri.clone()
+        + "?hostname="
+        + &domain.hostname
         + "&myip="
         + ip_addr
 }
