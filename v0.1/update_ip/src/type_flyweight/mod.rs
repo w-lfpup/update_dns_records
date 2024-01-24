@@ -4,11 +4,6 @@ use std::collections::HashMap;
 // beware of hydra
 pub type IpServices = Vec<(String, String)>;
 
-mod tester;
-
-#[derive(Clone, Serialize, Deserialize, Debug)]
-pub use tester::{ResponseJson as ResponseJsonTester};
-
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct ResponseJson {
     pub status_code: u16,
