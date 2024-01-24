@@ -1,7 +1,7 @@
 use bytes::Buf;
 use bytes::Bytes;
-use http_body_util::{BodyExt, Empty};
 use http::{Request, Response};
+use http_body_util::{BodyExt, Empty};
 use hyper::body::Incoming;
 use hyper::client::conn::http1;
 use hyper_util::rt::TokioIo;
@@ -9,8 +9,6 @@ use native_tls::TlsConnector;
 use std::io;
 use std::time::SystemTime;
 use tokio::net::TcpStream;
-
-// https://help.dyn.com/remote-access-api/perform-update/
 
 use crate::type_flyweight::ResponseJson;
 
@@ -32,14 +30,17 @@ pub async fn request_http1_tls_response(
         Some(stream) => stream,
         _ => return Err("failed to get host and address from uri".to_string()),
     };
+    
     let io = match create_tls_stream(&host, &addr).await {
         Ok(stream) => stream,
         Err(e) => return Err(e),
     };
+    
     let (mut sender, conn) = match http1::handshake(io).await {
         Ok(handshake) => handshake,
         Err(e) => return Err(e.to_string()),
     };
+    
     tokio::task::spawn(async move {
         if let Err(_err) = conn.await { /* log connection error */ }
     });
@@ -169,7 +170,7 @@ pub fn get_timestamp() -> Result<u128, String> {
 pub async fn convert_response_to_json(res: Response<Incoming>) -> Result<ResponseJson, String> {
     let timestamp = match get_timestamp() {
         Ok(n) => n,
-        Err(e) => return Err(e.to_string()),
+        Err(e) => return Err(e),
     };
 
     let headers = get_headers(&res);
@@ -177,7 +178,7 @@ pub async fn convert_response_to_json(res: Response<Incoming>) -> Result<Respons
 
     let body_str = match response_body_to_string(res).await {
         Ok(r) => r,
-        Err(e) => return Err(e.to_string()),
+        Err(e) => return Err(e),
     };
 
     Ok(ResponseJson {

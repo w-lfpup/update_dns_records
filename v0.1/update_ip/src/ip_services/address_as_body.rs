@@ -3,8 +3,7 @@ use std::net;
 use crate::requests;
 use crate::type_flyweight::IpServiceResult;
 
-// base use case
-// request without a body returns response with IP Address as body
+// request with empty body returns response body with IP Address
 pub async fn request_address_as_response_body(
     mut ip_service_result: IpServiceResult,
 ) -> IpServiceResult {
