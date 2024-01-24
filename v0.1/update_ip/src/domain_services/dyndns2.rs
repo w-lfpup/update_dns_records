@@ -96,6 +96,7 @@ async fn create_build_result(
 
     // get response
     let mut response = None;
+    /*
     if let Some(req) = request {
         response = match requests::request_http1_tls_response(req).await {
             Ok(r) => Some(r),
@@ -105,6 +106,7 @@ async fn create_build_result(
             }
         };
     }
+    */
 
     // create json-able struct from response
     // add to domain result

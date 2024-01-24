@@ -11,7 +11,12 @@ pub async fn request_ip(mut results: UpdateIpResults, config: &Config) -> Update
     // add previous address before requesting updated address
     // if ip service results fails, previous ip is preserved
     let mut ip_service_result = IpServiceResult::new();
-    ip_service_result.address = results.ip_service_result.address.clone();
+    
+    // preserve previous address
+    ip_service_result.prev_address = match &results.ip_service_result.address {
+  		Some(address) => Some(address.clone()),
+  		_ => results.ip_service_result.prev_address.clone()
+    };
 
     // get service or return previous results
     let response_type = match get_ip_service(&results, &config) {

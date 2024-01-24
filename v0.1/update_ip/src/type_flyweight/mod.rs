@@ -14,6 +14,7 @@ pub struct ResponseJson {
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct IpServiceResult {
+    pub prev_address: Option<String>,
     pub address: Option<String>,
     pub service: Option<String>,
     pub address_changed: bool,
@@ -52,6 +53,7 @@ pub struct DomainServices {
 impl IpServiceResult {
     pub fn new() -> IpServiceResult {
         IpServiceResult {
+        		prev_address: None,
             address: None,
             service: None,
             address_changed: false,
