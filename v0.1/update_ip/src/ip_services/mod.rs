@@ -2,7 +2,6 @@ use rand;
 use rand::Rng;
 
 use crate::config::Config;
-use crate::results;
 use crate::type_flyweight::{IpServiceResult, UpdateIpResults};
 
 mod address_as_body;

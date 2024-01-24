@@ -6,6 +6,7 @@ use hyper::body::Incoming;
 use hyper::client::conn::http1;
 use hyper_util::rt::TokioIo;
 use native_tls::TlsConnector;
+use std::collections::HashMap;
 use std::io;
 use std::time::SystemTime;
 use tokio::net::TcpStream;
@@ -30,17 +31,17 @@ pub async fn request_http1_tls_response(
         Some(stream) => stream,
         _ => return Err("failed to get host and address from uri".to_string()),
     };
-    
+
     let io = match create_tls_stream(&host, &addr).await {
         Ok(stream) => stream,
         Err(e) => return Err(e),
     };
-    
+
     let (mut sender, conn) = match http1::handshake(io).await {
         Ok(handshake) => handshake,
         Err(e) => return Err(e.to_string()),
     };
-    
+
     tokio::task::spawn(async move {
         if let Err(_err) = conn.await { /* log connection error */ }
     });
@@ -148,14 +149,14 @@ pub fn create_request_with_empty_body(url_string: &str) -> Result<Request<Empty<
     only adds ascii safe headers and header values.
     w3c spec accepts opaque values.
 */
-pub fn get_headers(res: &Response<Incoming>) -> Vec<(String, String)> {
-    let mut headers = Vec::<(String, String)>::new();
+pub fn get_headers(res: &Response<Incoming>) -> HashMap<String, String> {
+    let mut headers = HashMap::<String, String>::new();
     for (key, value) in res.headers() {
         let value_str = match value.to_str() {
             Ok(v) => v.to_string(),
             _ => continue,
         };
-        headers.push((key.to_string(), value_str))
+        headers.insert(key.to_string(), value_str);
     }
     headers
 }
@@ -167,7 +168,9 @@ pub fn get_timestamp() -> Result<u128, String> {
     }
 }
 
-pub async fn convert_response_to_json_struct(res: Response<Incoming>) -> Result<ResponseJson, String> {
+pub async fn convert_response_to_json_struct(
+    res: Response<Incoming>,
+) -> Result<ResponseJson, String> {
     let timestamp = match get_timestamp() {
         Ok(n) => n,
         Err(e) => return Err(e),

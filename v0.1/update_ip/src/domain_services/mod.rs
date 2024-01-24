@@ -15,7 +15,7 @@ pub async fn update_domains(mut results: UpdateIpResults, config: &Config) -> Up
     // unfortunately that's the pattern but it's simple
     let mut domain_results = HashMap::<String, DomainResult>::new();
     domain_results = dyndns2::update_domains(domain_results, &results, config).await;
-    
+
     results.domain_service_results = domain_results;
     results
 }

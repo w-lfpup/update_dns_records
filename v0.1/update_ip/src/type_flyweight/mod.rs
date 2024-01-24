@@ -4,11 +4,16 @@ use std::collections::HashMap;
 // beware of hydra
 pub type IpServices = Vec<(String, String)>;
 
+mod tester;
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub use tester::{ResponseJson as ResponseJsonTester};
+
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct ResponseJson {
     pub status_code: u16,
     pub body: String,
-    pub headers: Vec<(String, String)>,
+    pub headers: HashMap<String, String>,
     pub timestamp: u128,
 }
 
@@ -50,34 +55,32 @@ pub struct DomainServices {
 }
 
 impl IpServiceResult {
-	pub fn new() -> IpServiceResult {
-	    IpServiceResult {
-        address: None,
-        service: None,
-        address_changed: false,
-        errors: Vec::new(),
-        response: None,
+    pub fn new() -> IpServiceResult {
+        IpServiceResult {
+            address: None,
+            service: None,
+            address_changed: false,
+            errors: Vec::new(),
+            response: None,
+        }
     }
-	}
 }
 
 impl DomainResult {
-	pub fn new (hostname: &String) -> DomainResult {
-	    DomainResult {
-        hostname: hostname.clone(),
-        errors: Vec::<String>::new(),
-        response: None,
+    pub fn new(hostname: &String) -> DomainResult {
+        DomainResult {
+            hostname: hostname.clone(),
+            errors: Vec::<String>::new(),
+            response: None,
+        }
     }
-	}
 }
-
 
 impl UpdateIpResults {
-	pub fn new() -> UpdateIpResults {
-    UpdateIpResults {
-        ip_service_result: IpServiceResult::new(),
-        domain_service_results: HashMap::<String, DomainResult>::new(),
+    pub fn new() -> UpdateIpResults {
+        UpdateIpResults {
+            ip_service_result: IpServiceResult::new(),
+            domain_service_results: HashMap::<String, DomainResult>::new(),
+        }
     }
-	}
 }
-

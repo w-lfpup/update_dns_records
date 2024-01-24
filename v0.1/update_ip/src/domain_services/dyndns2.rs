@@ -6,7 +6,6 @@ use std::collections::HashMap;
 
 use crate::config::Config;
 use crate::requests;
-use crate::results;
 use crate::type_flyweight::{DomainResult, Dyndns2, UpdateIpResults};
 
 /*
@@ -37,32 +36,31 @@ pub async fn update_domains(
         // someone could add or remove a domain from the config file between updates
         let prev_domain_result = prev_results.domain_service_results.get(&domain.hostname);
 
-				// if address did not change and there's no retry, save previous domain_result
+        // if address did not change and there's no retry, save previous domain_result
         if !prev_results.ip_service_result.address_changed && !should_retry(prev_domain_result) {
-        	if let Some(prev_result) = prev_domain_result {
-        		domain_results.insert(domain.hostname.clone(), prev_result.clone());
-        	}
-        	continue;
+            if let Some(prev_result) = prev_domain_result {
+                domain_results.insert(domain.hostname.clone(), prev_result.clone());
+            }
+            continue;
         }
 
-				// this is rough
-				//  if no address exists move on
-				//  the previous domain results could be lost at this junction
-				//	(updated: true, )
-				//  add domain results before continue, looks awkward but 
-      	let address = match &prev_results.ip_service_result.address {
-          Some(d) => d,
-          _ => {
-		      	if let Some(prev_result) = prev_domain_result {
-		      		domain_results.insert(domain.hostname.clone(), prev_result.clone());
-		      	}
-		      	continue;
-		      },
+        //  if no address exists move on
+        //  the previous domain results could be lost at this junction
+        //	(updated: true, retry: false) does not qualify up above
+        //  add domain results before continue, looks awkward but *shrugs*
+        let address = match &prev_results.ip_service_result.address {
+            Some(d) => d,
+            _ => {
+                if let Some(prev_result) = prev_domain_result {
+                    domain_results.insert(domain.hostname.clone(), prev_result.clone());
+                }
+                continue;
+            }
         };
 
-				// build domain result
+        // build domain result
         let mut domain_result = DomainResult::new(&domain.hostname);
-				domain_result = create_build_result(domain_result, domain, &address).await;
+        domain_result = create_build_result(domain_result, domain, &address).await;
 
         domain_results.insert(domain.hostname.clone(), domain_result);
     }
@@ -74,48 +72,52 @@ pub async fn update_domains(
 //		- request failed
 //		- service returns "911"
 fn should_retry(domain_result: Option<&DomainResult>) -> bool {
-  if let Some(prev_result) = domain_result {
-    if let Some(response) = &prev_result.response {
-        return response.body.starts_with("911");
+    if let Some(prev_result) = domain_result {
+        if let Some(response) = &prev_result.response {
+            return response.body.starts_with("911");
+        }
     }
-  }
-  
-  false
+
+    false
 }
 
-async fn create_build_result(mut domain_result: DomainResult, domain: &Dyndns2, address: &str) -> DomainResult {
-  let request = match get_https_dyndns2_req(&domain, &address) {
-      Ok(s) => Some(s),
-      Err(e) => {
-          domain_result.errors.push(e.to_string());
-          None
-      }
-  };
+async fn create_build_result(
+    mut domain_result: DomainResult,
+    domain: &Dyndns2,
+    address: &str,
+) -> DomainResult {
+    let request = match get_https_dyndns2_req(&domain, &address) {
+        Ok(s) => Some(s),
+        Err(e) => {
+            domain_result.errors.push(e.to_string());
+            None
+        }
+    };
 
-  // get response
-  let mut response = None;
-  /*
-  if let Some(req) = request {
-      response = match requests::request_http1_tls_response(req).await {
-          Ok(r) => Some(r),
-          Err(e) => {
-              domain_result.errors.push(e.to_string());
-              None
-          }
-      };
-  }
-  */
+    // get response
+    let mut response = None;
+    /*
+    if let Some(req) = request {
+        response = match requests::request_http1_tls_response(req).await {
+            Ok(r) => Some(r),
+            Err(e) => {
+                domain_result.errors.push(e.to_string());
+                None
+            }
+        };
+    }
+    */
 
-  // create json-able struct from response
-  // add to domain result
-  if let Some(res) = response {
-      match requests::convert_response_to_json_struct(res).await {
-          Ok(r) => domain_result.response = Some(r),
-          Err(e) => domain_result.errors.push(e.to_string()),
-      }
-  };
-  
-  domain_result
+    // create json-able struct from response
+    // add to domain result
+    if let Some(res) = response {
+        match requests::convert_response_to_json_struct(res).await {
+            Ok(r) => domain_result.response = Some(r),
+            Err(e) => domain_result.errors.push(e.to_string()),
+        }
+    };
+
+    domain_result
 }
 
 fn get_https_dyndns2_req(

@@ -40,7 +40,7 @@ pub async fn request_address_as_response_body(
         }
     };
 
-    // get address if request is successful
+    // set address if request is successful
     if let Some(response) = &ip_service_result.response {
         match response.body.parse::<net::IpAddr>() {
             Ok(ip) => ip_service_result.address = Some(ip.to_string()),
