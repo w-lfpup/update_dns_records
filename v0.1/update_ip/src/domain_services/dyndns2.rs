@@ -12,6 +12,15 @@ use crate::results;
 use crate::type_flyweight::{DomainResult, dyndns2, UpdateIpResults};
 
 /*
+	Implements a subset of the dyndns2 protocol.
+	
+	https://help.dyn.com/remote-access-api/return-codes/
+	Not all responses are implemented but all responses are recorded.
+	Only the 911 warrants a retry
+*/
+
+
+/*
 https://support.google.com/domains/answer/6147083?hl=en
 
 requests must have a agent user
@@ -31,7 +40,8 @@ conflict AAAA 	Error 	A custom A or AAAA resource record conflicts with the upda
 
 const SERVICE_URI_HOST: &str = "domains.google.com";
 const SERVICE_URI_AUTHORITY: &str = "domains.google.com";
-const CLIENT_HEADER_VALUE: &str = "Chrome/41.0 brian.t.vann@gmail.com";
+const CLIENT_HEADER_VALUE: &str = "hyper/1.0 rust-client";
+// const CLIENT_HEADER_VALUE: &str = "Chrome/41.0 brian.t.vann@gmail.com";
 
 // must return results
 pub async fn update_domains(
@@ -63,7 +73,9 @@ pub async fn update_domains(
         // if prev results existed get retry and critical
         let mut retry = true;
         if let Some(prev_result) = prev_domain_result {
-            retry = prev_result.retry;
+        	if let Some(response) = prev_result {
+            retry = response.body.starts_with(&"911".to_string());
+        	}
         }
 
         // do not update if address has not changed and no retries
@@ -76,6 +88,7 @@ pub async fn update_domains(
         }
 
         let uri_str = get_https_dyndns2_uri(
+        		&domain.domain,
             &domain.hostname,
             &address,
         );
@@ -137,8 +150,9 @@ pub async fn update_domains(
 }
 
 fn get_https_dyndns2_uri(
+    domain_service: &str,
     hostname: &str,
   	ip_addr: &str,
 ) -> String {
-    "https://domains.google.com/nic/update?hostname=".to_string() + hostname + "&myip=" + ip_addr
+    "https://" + domain_service + "/nic/update?hostname=".to_string() + hostname + "&myip=" + ip_addr
 }

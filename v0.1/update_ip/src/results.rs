@@ -21,7 +21,6 @@ pub fn create_ip_service_result() -> IpServiceResult {
 pub fn create_domain_result(hostname: &String) -> DomainResult {
     DomainResult {
         hostname: hostname.clone(),
-        retry: false,
         errors: Vec::<String>::new(),
         response: None,
     }

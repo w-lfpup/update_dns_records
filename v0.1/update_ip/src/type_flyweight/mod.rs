@@ -36,13 +36,6 @@ pub struct UpdateIpResults {
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct Squarespace {
-    pub hostname: String,
-    pub username: String,
-    pub password: String,
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Dyndns2 {
     pub domain: String,
     pub hostname: String,
@@ -55,5 +48,4 @@ pub struct Dyndns2 {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct DomainServices {
     pub dyndns2: Option<Vec<Dyndns2>>,
-    pub squarespace: Option<Vec<Squarespace>>,
 }
