@@ -4,7 +4,6 @@ use http::Request;
 use http_body_util::Empty;
 use std::collections::HashMap;
 
-use crate::requests;
 use crate::results;
 use crate::type_flyweight::{Config, DomainResult, Dyndns2, UpdateIpResults};
 
@@ -38,7 +37,7 @@ pub async fn update_domains(
         if let Some(prev_result) = prev_domain_result {
             domain_results.insert(domain.hostname.clone(), prev_result.clone());
         }
-        
+
         // continue if address did not change and there's no retry
         if !results::address_has_changed(results) && !should_retry(prev_domain_result) {
             continue;
@@ -57,7 +56,7 @@ pub async fn update_domains(
         // build domain result
         let domain_result = build_domain_result(&domain, &address).await;
 
-				// write over previous entry
+        // write over previous entry
         domain_results.insert(domain.hostname.clone(), domain_result);
     }
 
@@ -77,12 +76,9 @@ fn should_retry(domain_result: Option<&DomainResult>) -> bool {
     false
 }
 
-async fn build_domain_result(
-    domain: &Dyndns2,
-    address: &str,
-) -> DomainResult {
+async fn build_domain_result(domain: &Dyndns2, address: &str) -> DomainResult {
     let mut domain_result = DomainResult::new(&domain.hostname);
-    
+
     let request = match get_https_dyndns2_req(&domain, &address) {
         Ok(s) => s,
         Err(e) => {
@@ -91,12 +87,15 @@ async fn build_domain_result(
         }
     };
 
+		println!("test:\n{:?}", request);
     // create json-able struct from response
     // add to domain result
+    /*
     match requests::request_http1_tls_response(request).await {
         Ok(r) => domain_result.response = Some(r),
         Err(e) => domain_result.errors.push(e.to_string()),
     }
+    */
 
     domain_result
 }

@@ -62,7 +62,6 @@ pub struct Dyndns2 {
     pub password: String,
 }
 
-
 impl IpServiceResult {
     pub fn new() -> IpServiceResult {
         IpServiceResult {

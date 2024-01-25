@@ -1,31 +1,19 @@
 {
   "ip_service_result": {
-    "address": "24.5.61.76",
+    "prev_address": "192.168.0.1",
+    "address": "192.168.0.1",
     "service": "https://checkip.amazonaws.com/",
-    "address_changed": true,
     "errors": [],
     "response": {
       "status_code": 200,
-      "body": "24.5.61.76",
-      "headers": [
-        [
-          "date",
-          "Wed, 24 Jan 2024 05:56:21 GMT"
-        ],
-        [
-          "server",
-          "Not Available"
-        ],
-        [
-          "content-length",
-          "11"
-        ],
-        [
-          "connection",
-          "keep-alive"
-        ]
-      ],
-      "timestamp": 1706075781503
+      "body": "172.58.1.111\n",
+      "headers": {
+        "content-length": "13",
+        "connection": "keep-alive",
+        "server": "Not Available",
+        "date": "Thu, 25 Jan 2024 08:37:13 GMT"
+      },
+      "timestamp": 1706171833699
     }
   },
   "domain_service_results": {

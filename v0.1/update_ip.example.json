@@ -1,8 +1,7 @@
 {
-	"results_filepath": "./find_ip.results.example.json",
+	"results_filepath": "./update_ip.results.example.json",
 	"ip_services": [
-		["https://checkip.amazonaws.com/", "address_as_body"],
-		["https://domains.google.com/checkip", "address_as_body"]
+		["https://checkip.amazonaws.com/", "address_as_body"]
 	],
 	"domain_services": {
 		"dyndns2": [{
