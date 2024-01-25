@@ -15,7 +15,7 @@ pub async fn request_address_as_response_body(
             return ip_service_result;
         }
     };
-    
+
     ip_service_result.service = Some(ip_service);
     ip_service_result.response = match requests::request_http1_tls_response(request).await {
         Ok(r) => Some(r),

@@ -74,9 +74,9 @@ fn get_host_and_authority(uri: &Uri) -> Option<(&str, String)> {
     };
 
     let port = match (uri.port(), scheme) {
-        (Some(p), _) => p.to_string(),
-        (None, "https") => "443".to_string(),
-        _ => "80".to_string(),
+        (Some(p), _) => p.as_u16(),
+        (None, "https") => 443,
+        _ => 80,
     };
 
     let host = match uri.host() {
@@ -84,7 +84,7 @@ fn get_host_and_authority(uri: &Uri) -> Option<(&str, String)> {
         _ => return None,
     };
 
-    let authority = host.to_string() + ":" + &port;
+    let authority = host.to_string() + ":" + &port.to_string();
 
     Some((host, authority))
 }
