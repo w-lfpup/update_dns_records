@@ -8,7 +8,6 @@ pub async fn request_address_as_response_body(
     mut ip_service_result: IpServiceResult,
     ip_service: String,
 ) -> IpServiceResult {
-    ip_service_result.service = Some(ip_service);
     let request = match requests::create_request_with_empty_body(&ip_service) {
         Ok(req) => req,
         Err(e) => {
@@ -16,7 +15,8 @@ pub async fn request_address_as_response_body(
             return ip_service_result;
         }
     };
-
+    
+    ip_service_result.service = Some(ip_service);
     ip_service_result.response = match requests::request_http1_tls_response(request).await {
         Ok(r) => Some(r),
         Err(e) => {
