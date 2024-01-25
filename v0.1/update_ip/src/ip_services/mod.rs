@@ -14,7 +14,7 @@ pub async fn request_ip(config: &Config, results: &UpdateIpResults) -> IpService
     };
 
     // get service uri and response type or return previous results
-    let (ip_service, response_type) = match get_ip_service(config, results) {
+    let (ip_service, response_type) = match get_random_ip_service(config, results) {
         Some(r) => r,
         _ => {
             ip_service_result
@@ -32,7 +32,7 @@ pub async fn request_ip(config: &Config, results: &UpdateIpResults) -> IpService
     }
 }
 
-fn get_ip_service(config: &Config, results: &UpdateIpResults) -> Option<(String, String)> {
+fn get_random_ip_service(config: &Config, results: &UpdateIpResults) -> Option<(String, String)> {
     if config.ip_services.len() == 0 {
         return None;
     }

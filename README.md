@@ -1,12 +1,12 @@
 # update_ip
 
-update Dynamic DNS services with rust and hyper
+Update Dynamic DNS services with rust and hyper.
 
 ## How to use
 
-`update_ip` requires a valid configuration to run.
+The `update_ip` application requires a valid configuration to run.
 
-An example of a configuration file is given below.
+An example of a JSON configuration file is given below.
 
 ```JSON
 {
@@ -33,7 +33,7 @@ The `domain_services` property lists domains to update by service or protocol.
 
 Currently `update_ip` only supports the `dyndns2` protocol but `update_ip` could potentially support any protocol.
 
-A valid configuration example can be found at
+A valid JSON configuration example can be found at
 `update_ip/v0.1/update_ip.example.json`
 
 ### Install update_ip
@@ -57,16 +57,13 @@ update_ip <path_to_configuration_file>
 
 The results of the operation will be written to the location defined by the `results_filepath` property of the config file.
 
-## why
+## Why?
 
-Alternative clients felt too cumbersome or provided too much functionality or their configurations didn't make sense to me (and I needed a rust project that involved a [disk -> remote -> disk] relationship)
+Alternative clients felt cumbersome, provided too much functionality, or their configuration files didn't make sense to me. (I also needed a rust project that involved a disk -> remote fetches -> disk dataflow)
 
-`update_ip` allows users use multiple ip services to fetch a public `ip address`.
-without repeatedly bashing an endpoint. This functions as a load balancer acting across multiple ip services.
-(Good neighbor attitude towards free services).
+The `update_ip` application has good neighbor policy. If there are more than two ip services, `update_ip` will not repeat a call to a previously used ip service. Multiple domains for multiple domain hosting services. A domain is only updated when a public `ip address` changes or if the previous attempt failed to update a domain.
 
-`update_ip` also allows users to update multiple domains from multiple services. A domain is only updated
-when a public `ip address` changes or if the previous attempt failed to update a domain.
+I wanted to keep the credentials in a single json configuration file (if someone's in the server it's over anyways)
 
 Finally, the results of `update_ip` are written to disk. This can improve logging and monitoring of home systems. 
 
