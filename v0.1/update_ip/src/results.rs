@@ -1,8 +1,7 @@
 use tokio::fs;
 
 // can use after mod declaration
-use crate::config::Config;
-use crate::type_flyweight::UpdateIpResults;
+use crate::type_flyweight::{Config, UpdateIpResults};
 
 pub async fn load_or_create_results(config: &Config) -> Option<UpdateIpResults> {
     if let Ok(json_as_str) = fs::read_to_string(&config.results_filepath).await {

@@ -1,5 +1,6 @@
 use bytes::Buf;
 use bytes::Bytes;
+use http::Uri;
 use http::{Request, Response};
 use http_body_util::{BodyExt, Empty};
 use hyper::body::Incoming;
@@ -27,12 +28,17 @@ use crate::type_flyweight::ResponseJson;
 pub async fn request_http1_tls_response(
     req: Request<Empty<Bytes>>,
 ) -> Result<ResponseJson, String> {
-    let (host, addr) = match create_host_and_authority(&req) {
-        Some(stream) => stream,
-        _ => return Err("failed to get host and address from uri".to_string()),
+    let host = match req.uri().host() {
+        Some(h) => h,
+        _ => return Err("failed to get host from uri".to_string()),
     };
 
-    let io = match create_tls_stream(&host, &addr).await {
+    let authority = match create_authority(&req.uri()) {
+        Some(stream) => stream,
+        _ => return Err("failed to get authority from uri".to_string()),
+    };
+
+    let io = match create_tls_stream(&host, &authority).await {
         Ok(stream) => stream,
         Err(e) => return Err(e),
     };
@@ -55,20 +61,18 @@ pub async fn request_http1_tls_response(
 }
 
 pub fn create_request_with_empty_body(url_string: &str) -> Result<Request<Empty<Bytes>>, String> {
-    let url = match http::Uri::try_from(url_string) {
+    let uri = match http::Uri::try_from(url_string) {
         Ok(u) => u,
         Err(e) => return Err(e.to_string()),
     };
 
-    let authority = match url.authority() {
+    let authority = match create_authority(&uri) {
         Some(u) => u.clone(),
-        _ => return Err("authority missing in url".to_string()),
+        _ => return Err("authority not found in url".to_string()),
     };
 
-    // add port when applicable
-
     let req = match Request::builder()
-        .uri(url)
+        .uri(url_string)
         .header(hyper::header::HOST, authority.as_str())
         .body(Empty::<Bytes>::new())
     {
@@ -77,6 +81,28 @@ pub fn create_request_with_empty_body(url_string: &str) -> Result<Request<Empty<
     };
 
     Ok(req)
+}
+
+fn create_authority(uri: &Uri) -> Option<String> {
+    let scheme = match uri.scheme() {
+        Some(s) => s.as_str(),
+        _ => http::uri::Scheme::HTTPS.as_str(),
+    };
+
+    let host = match uri.host() {
+        Some(h) => h,
+        _ => return None,
+    };
+
+    let port = match (uri.port(), scheme) {
+        (Some(p), _) => p.to_string(),
+        (None, "https") => "443".to_string(),
+        (_, _) => "80".to_string(),
+    };
+
+    let authority = host.to_string() + ":" + &port;
+
+    Some(authority)
 }
 
 // this has multiple "types" of errors
@@ -103,31 +129,6 @@ async fn create_tls_stream(
     };
 
     Ok(tls_stream)
-}
-
-fn create_host_and_authority(req: &Request<Empty<Bytes>>) -> Option<(&str, String)> {
-    // need to check for port or default
-    let host = match req.uri().host() {
-        Some(h) => h,
-        _ => return None,
-    };
-
-    let scheme = match req.uri().scheme() {
-        Some(s) => s.as_str(),
-        _ => http::uri::Scheme::HTTPS.as_str(),
-    };
-
-    let port = match req.uri().port() {
-        Some(p) => p.to_string(),
-        _ => match scheme {
-            "http" => "80".to_string(),
-            _ => "443".to_string(),
-        },
-    };
-
-    let authority = host.to_string() + ":" + &port;
-
-    Some((host, authority))
 }
 
 async fn convert_response_to_json_struct(res: Response<Incoming>) -> Result<ResponseJson, String> {

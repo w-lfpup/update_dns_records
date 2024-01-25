@@ -1,8 +1,7 @@
 use rand;
 use rand::Rng;
 
-use crate::config::Config;
-use crate::type_flyweight::{IpServiceResult, UpdateIpResults};
+use crate::type_flyweight::{Config, IpServiceResult, UpdateIpResults};
 
 mod address_as_body;
 
@@ -12,7 +11,7 @@ pub async fn request_ip(results: &UpdateIpResults, config: &Config) -> IpService
     // if ip service results fails, previous ip is preserved
     let mut ip_service_result = IpServiceResult::new();
 
-    // preserve previous address
+    // preserve the last run's "current" address as this run's previous address
     ip_service_result.prev_address = match &results.ip_service_result.address {
         Some(address) => Some(address.clone()),
         _ => results.ip_service_result.prev_address.clone(),

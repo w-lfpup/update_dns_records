@@ -4,9 +4,8 @@ use http::Request;
 use http_body_util::Empty;
 use std::collections::HashMap;
 
-use crate::config::Config;
 use crate::requests;
-use crate::type_flyweight::{DomainResult, Dyndns2, UpdateIpResults};
+use crate::type_flyweight::{Config, DomainResult, Dyndns2, UpdateIpResults};
 
 /*
     Implements a subset of the dyndns2 protocol.

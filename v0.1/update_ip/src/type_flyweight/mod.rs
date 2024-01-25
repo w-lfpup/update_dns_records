@@ -1,8 +1,20 @@
+// this module should be an external lib
+// Types should be accessible to other applications
+// However, they are tightly coupled to a version of serde
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::path;
 
 // beware of hydra
 pub type IpServices = Vec<(String, String)>;
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct Config {
+    pub results_filepath: path::PathBuf,
+    pub ip_services: IpServices,
+    pub domain_services: DomainServices,
+}
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct ResponseJson {

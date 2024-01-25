@@ -17,14 +17,16 @@ mod type_flyweight;
 
     Finally the results struct is written to disk.
 */
+
 #[tokio::main]
 async fn main() {
     let args = match env::args().nth(1) {
-        Some(a) => path::PathBuf::from(a),
+        Some(a) => a,
         None => return println!("argument error:\nconfig file not found."),
     };
 
-    let config = match config::from_filepath(&args).await {
+    let config_path = path::Path::new(&args);
+    let config = match config::from_path(config_path).await {
         Ok(c) => c,
         Err(e) => return println!("configuration error:\n{}", e),
     };
