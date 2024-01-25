@@ -28,12 +28,7 @@ use crate::type_flyweight::ResponseJson;
 pub async fn request_http1_tls_response(
     req: Request<Empty<Bytes>>,
 ) -> Result<ResponseJson, String> {
-    let host = match req.uri().host() {
-        Some(h) => h,
-        _ => return Err("failed to get host from uri".to_string()),
-    };
-
-    let authority = match create_authority(&req.uri()) {
+    let (host, authority) = match get_host_and_authority(&req.uri()) {
         Some(stream) => stream,
         _ => return Err("failed to get authority from uri".to_string()),
     };
@@ -66,7 +61,7 @@ pub fn create_request_with_empty_body(url_string: &str) -> Result<Request<Empty<
         Err(e) => return Err(e.to_string()),
     };
 
-    let authority = match create_authority(&uri) {
+    let (_, authority) = match get_host_and_authority(&uri) {
         Some(u) => u.clone(),
         _ => return Err("authority not found in url".to_string()),
     };
@@ -83,15 +78,10 @@ pub fn create_request_with_empty_body(url_string: &str) -> Result<Request<Empty<
     Ok(req)
 }
 
-fn create_authority(uri: &Uri) -> Option<String> {
+fn get_host_and_authority(uri: &Uri) -> Option<(&str, String)> {
     let scheme = match uri.scheme() {
         Some(s) => s.as_str(),
         _ => http::uri::Scheme::HTTPS.as_str(),
-    };
-
-    let host = match uri.host() {
-        Some(h) => h,
-        _ => return None,
     };
 
     let port = match (uri.port(), scheme) {
@@ -100,9 +90,14 @@ fn create_authority(uri: &Uri) -> Option<String> {
         (_, _) => "80".to_string(),
     };
 
+    let host = match uri.host() {
+        Some(h) => h,
+        _ => return None,
+    };
+    
     let authority = host.to_string() + ":" + &port;
 
-    Some(authority)
+    Some((host, authority))
 }
 
 // this has multiple "types" of errors
