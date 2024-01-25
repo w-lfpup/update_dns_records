@@ -1,11 +1,12 @@
 {
-	"results_filepath": "./find_ip.results.example.json",
+	"results_filepath": "./update_ip.results.example.json",
 	"ip_services": [
 		["https://checkip.amazonaws.com/", "address_as_body"],
 		["https://domains.google.com/checkip", "address_as_body"]
 	],
 	"domain_services": {
-		"squarespace": [{
+		"dyndns2": [{
+				"service_uri": "https://domains.google.com/nic/update",
 				"hostname": "something.com",
 				"username": "...",
 				"password": "..."

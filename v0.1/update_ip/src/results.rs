@@ -1,57 +1,28 @@
-use std::collections::HashMap;
 use tokio::fs;
 
-// can use after mod declaration
-use crate::config::Config;
-use crate::type_flyweight::DomainResult;
-use crate::type_flyweight::IpServiceResult;
-use crate::type_flyweight::UpdateIpResults;
+use crate::type_flyweight::{Config, UpdateIpResults};
 
-// no service initially
-pub fn create_ip_service_result() -> IpServiceResult {
-    IpServiceResult {
-        address: None,
-        service: None,
-        address_changed: false,
-        errors: Vec::new(),
-        response: None,
-    }
-}
-
-pub fn create_domain_result(hostname: &String) -> DomainResult {
-    DomainResult {
-        hostname: hostname.clone(),
-        retry: false,
-        errors: Vec::<String>::new(),
-        response: None,
-    }
-}
-
-fn create_results() -> UpdateIpResults {
-    UpdateIpResults {
-        ip_service_result: create_ip_service_result(),
-        domain_service_results: HashMap::<String, DomainResult>::new(),
-    }
-}
-
-/*
-    part of top-level function series
-*/
 pub async fn load_or_create_results(config: &Config) -> Option<UpdateIpResults> {
-    let json_as_str = match fs::read_to_string(&config.results_filepath).await {
-        Ok(r) => r,
-        Err(_e) => return Some(create_results()),
+    if let Ok(json_as_str) = fs::read_to_string(&config.results_filepath).await {
+        if let Ok(r) = serde_json::from_str(&json_as_str) {
+            return Some(r);
+        }
     };
 
-    match serde_json::from_str(&json_as_str) {
-        Ok(j) => Some(j),
-        Err(_e) => return Some(create_results()),
+    Some(UpdateIpResults::new())
+}
+
+pub fn address_has_changed(update_ip_results: &UpdateIpResults) -> bool {
+    match (
+        &update_ip_results.ip_service_result.prev_address,
+        &update_ip_results.ip_service_result.address,
+    ) {
+        (Some(prev_ip), Some(curr_ip)) => prev_ip != curr_ip,
+        (None, Some(_curr_ip)) => true,
+        _ => false,
     }
 }
 
-/*
-    part of top-level function series
-*/
 pub async fn write_to_file(
     results: UpdateIpResults,
     config: &Config,
@@ -61,7 +32,9 @@ pub async fn write_to_file(
         Err(e) => return Err(e.to_string()),
     };
 
-    let _ = fs::write(&config.results_filepath, json_str).await;
+    if let Err(e) = fs::write(&config.results_filepath, json_str).await {
+        return Err(e.to_string());
+    };
 
     Ok(results)
 }

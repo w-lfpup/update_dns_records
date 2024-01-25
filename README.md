@@ -1,6 +1,6 @@
 # update_ip
 
-update DDNS services with rust and hyper
+update Dynamic DNS services with rust and hyper
 
 ## How to use
 
@@ -16,7 +16,7 @@ An example of a configuration file is given below.
 		["https://domains.google.com/checkip", "address_as_body"]
 	],
 	"domain_services": {
-		"squarespace": [{
+		"dyndns2": [{
 				"hostname": "something.com",
 				"username": "...",
 				"password": "..."
@@ -29,56 +29,47 @@ The `results_filepath` property can be relative to the location of the `config` 
 
 The `ip_services` property defines a list of services with a `url` and its `response_type`.
 
-The `domain_services` property lists domains to update by service.
+The `domain_services` property lists domains to update by service or protocol.
+
+Currently `update_ip` only supports the `dyndns2` protocol but `update_ip` could potentially support any protocol.
+
+A valid configuration example can be found at
+`update_ip/v0.1/update_ip.example.json`
+
+### Install update_ip
+
+Execute the following to install `update_ip`.
+
+```
+git clone https://github.com/herebythere/update_ip
+cargo install --path update_ip/v0.1/update_ip
+```
+
+### Run update_ip
+
+The `update_ip` application accepts one argument from the command line:
+
+- A valid `update_ip` JSON configuration file
+
+```
+update_ip <path_to_configuration_file>
+```
+
+The results of the operation will be written to the location defined by the `results_filepath` property of the config file.
 
 ## why
 
-Alternative clients felt too cumbersome or provided too much functionality or their configurations didn't make sense to me.
+Alternative clients felt too cumbersome or provided too much functionality or their configurations didn't make sense to me (and I needed a rust project that involved a [disk -> remote -> disk] relationship)
 
 `update_ip` allows users use multiple ip services to fetch a public `ip address`.
-What service is queried never repeats. This acts as a load balancer across multip ip services.
+without repeatedly bashing an endpoint. This functions as a load balancer acting across multiple ip services.
 (Good neighbor attitude towards free services).
 
-`update_ip` allows users to update multiple domains from multiple services. A domain is only updated
+`update_ip` also allows users to update multiple domains from multiple services. A domain is only updated
 when a public `ip address` changes or if the previous attempt failed to update a domain.
 
-## implementation details
+Finally, the results of `update_ip` are written to disk. This can improve logging and monitoring of home systems. 
 
-### birds eye code
+## Licence
 
-A configuration json file is read from disk.
-
-A new `UpdateIpResults` struct is generated and written to disk every run.
-
-Results are defined by the `UpdateIpResults` struct. It's composed of an `IpServiceResult` struct and a `Vec<DomainResult>`.
-
-A new `IpServiceResult` is reduced from the previous `IpServiceResult` to include the last known `ip address`.
-This guarantees that if the current attempt to query an `ip address` fails, the previous `ip address` is retained.
-
-A new `Vec<DomainResult>` is created each run.
-
-
-
-## contributions
-
-This problem is a hydra.
-
-There are potentially as many modules as there are ddns services.
-DDNS services can also disappear, rendering modules obsolete.
-
-Currently I'm searching for a way to only load services on an as needed basis.
-But this is beyond the scope of my capabilities in Rust (I'm still relatively new).
-
-I hate forking as a solution but it's the most timely way of adding a feature.
-
-If there's an interest in creating a community driven ddns client, I could define a clear pattern
-to review and accept external contirbutions.
-
-
-## conventions
-
-for mental health:
-reduce imports and libraries
-
-if in an async env, prefer async over std
-// ie tokio file vs std file
+BSD 3-Clause License

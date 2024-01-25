@@ -1,45 +1,37 @@
-use std::io;
-
 use bytes::Buf;
 use bytes::Bytes;
-use http::Request;
-use http::Response;
+use http::Uri;
+use http::{Request, Response};
 use http_body_util::{BodyExt, Empty};
 use hyper::body::Incoming;
 use hyper::client::conn::http1;
 use hyper_util::rt::TokioIo;
 use native_tls::TlsConnector;
+use std::collections::HashMap;
+use std::io;
 use std::time::SystemTime;
 use tokio::net::TcpStream;
 
 use crate::type_flyweight::ResponseJson;
 
-/*
-    all upstream requests require a jsonable or (de)serializeable effort
-
-    requests can return a body reader if not string
-
-    serde can take a reader
-    and strings can take a reader
-
-    can let downstream functions decide
-*/
-
 pub async fn request_http1_tls_response(
     req: Request<Empty<Bytes>>,
-) -> Result<Response<Incoming>, String> {
-    let (host, addr) = match create_host_and_authority(&req) {
+) -> Result<ResponseJson, String> {
+    let (host, authority) = match get_host_and_authority(&req.uri()) {
         Some(stream) => stream,
-        _ => return Err("failed to get host and address from uri".to_string()),
+        _ => return Err("failed to get authority from uri".to_string()),
     };
-    let io = match create_tls_stream(&host, &addr).await {
+
+    let io = match create_tls_stream(&host, &authority).await {
         Ok(stream) => stream,
         Err(e) => return Err(e),
     };
+
     let (mut sender, conn) = match http1::handshake(io).await {
         Ok(handshake) => handshake,
         Err(e) => return Err(e.to_string()),
     };
+
     tokio::task::spawn(async move {
         if let Err(_err) = conn.await { /* log connection error */ }
     });
@@ -49,7 +41,52 @@ pub async fn request_http1_tls_response(
         Err(e) => return Err(e.to_string()),
     };
 
-    Ok(res)
+    convert_response_to_json_struct(res).await
+}
+
+pub fn create_request_with_empty_body(url_string: &str) -> Result<Request<Empty<Bytes>>, String> {
+    let uri = match http::Uri::try_from(url_string) {
+        Ok(u) => u,
+        Err(e) => return Err(e.to_string()),
+    };
+
+    let (_, authority) = match get_host_and_authority(&uri) {
+        Some(u) => u.clone(),
+        _ => return Err("authority not found in url".to_string()),
+    };
+
+    let req = match Request::builder()
+        .uri(url_string)
+        .header(hyper::header::HOST, authority.as_str())
+        .body(Empty::<Bytes>::new())
+    {
+        Ok(r) => r,
+        Err(e) => return Err(e.to_string()),
+    };
+
+    Ok(req)
+}
+
+fn get_host_and_authority(uri: &Uri) -> Option<(&str, String)> {
+    let scheme = match uri.scheme() {
+        Some(s) => s.as_str(),
+        _ => http::uri::Scheme::HTTPS.as_str(),
+    };
+
+    let port = match (uri.port(), scheme) {
+        (Some(p), _) => p.to_string(),
+        (None, "https") => "443".to_string(),
+        _ => "80".to_string(),
+    };
+
+    let host = match uri.host() {
+        Some(h) => h,
+        _ => return None,
+    };
+
+    let authority = host.to_string() + ":" + &port;
+
+    Some((host, authority))
 }
 
 // this has multiple "types" of errors
@@ -78,32 +115,29 @@ async fn create_tls_stream(
     Ok(tls_stream)
 }
 
-fn create_host_and_authority(req: &Request<Empty<Bytes>>) -> Option<(&str, String)> {
-    // need to check for port or default
-    let host = match req.uri().host() {
-        Some(h) => h,
-        _ => return None,
+async fn convert_response_to_json_struct(res: Response<Incoming>) -> Result<ResponseJson, String> {
+    let timestamp = match get_timestamp() {
+        Ok(n) => n,
+        Err(e) => return Err(e),
     };
 
-    let scheme = match req.uri().scheme() {
-        Some(s) => s.as_str(),
-        _ => http::uri::Scheme::HTTPS.as_str(),
+    let headers = get_headers(&res);
+    let status = res.status().as_u16();
+
+    let body_str = match response_body_to_string(res).await {
+        Ok(r) => r,
+        Err(e) => return Err(e),
     };
 
-    let port = match req.uri().port() {
-        Some(p) => p.to_string(),
-        _ => match scheme {
-            "http" => "80".to_string(),
-            _ => "443".to_string(),
-        },
-    };
-
-    let authority = host.to_string() + ":" + &port;
-
-    Some((host, authority))
+    Ok(ResponseJson {
+        status_code: status,
+        body: body_str,
+        headers: headers,
+        timestamp: timestamp,
+    })
 }
 
-pub async fn response_body_to_string(response: Response<Incoming>) -> Result<String, String> {
+async fn response_body_to_string(response: Response<Incoming>) -> Result<String, String> {
     // asynchronously aggregate the chunks of the body
     let body = match response.collect().await {
         Ok(b) => b.aggregate(),
@@ -115,90 +149,28 @@ pub async fn response_body_to_string(response: Response<Incoming>) -> Result<Str
         Err(e) => return Err(e.to_string()),
     };
 
-    Ok(ip_str.trim().to_string())
-}
-
-pub fn create_request_with_empty_body(url_string: &str) -> Result<Request<Empty<Bytes>>, String> {
-    let url = match http::Uri::try_from(url_string) {
-        Ok(u) => u,
-        Err(e) => return Err(e.to_string()),
-    };
-
-    let authority = match url.authority() {
-        Some(u) => u.clone(),
-        _ => return Err("authority missing in url".to_string()),
-    };
-
-    // add port when applicable
-
-    let req = match Request::builder()
-        .uri(url)
-        .header(hyper::header::HOST, authority.as_str())
-        .body(Empty::<Bytes>::new())
-    {
-        Ok(r) => r,
-        Err(e) => return Err(e.to_string()),
-    };
-
-    Ok(req)
+    Ok(ip_str.to_string())
 }
 
 /*
     only adds ascii safe headers and header values.
     w3c spec accepts opaque values.
 */
-pub fn get_headers(res: &Response<Incoming>) -> Vec<(String, String)> {
-    let mut headers = Vec::<(String, String)>::new();
+fn get_headers(res: &Response<Incoming>) -> HashMap<String, String> {
+    let mut headers = HashMap::<String, String>::new();
     for (key, value) in res.headers() {
         let value_str = match value.to_str() {
-            Ok(v) => v.to_string(),
+            Ok(v) => v,
             _ => continue,
         };
-        headers.push((key.to_string(), value_str))
+        headers.insert(key.to_string(), value_str.to_string());
     }
     headers
 }
 
-pub fn get_timestamp() -> Result<u128, String> {
+fn get_timestamp() -> Result<u128, String> {
     match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
         Ok(n) => Ok(n.as_millis()),
         Err(e) => Err(e.to_string()),
     }
-}
-
-pub async fn convert_response_to_json(res: Response<Incoming>) -> Result<ResponseJson, String> {
-    let timestamp = match get_timestamp() {
-        Ok(n) => n,
-        Err(e) => return Err(e.to_string()),
-    };
-
-    let headers = get_headers(&res);
-    let status = res.status().as_u16();
-
-    let body_str = match response_body_to_string(res).await {
-        Ok(r) => r,
-        Err(e) => return Err(e.to_string()),
-    };
-
-    Ok(ResponseJson {
-        status_code: status,
-        body: body_str,
-        headers: headers,
-        timestamp: timestamp,
-    })
-}
-
-pub fn get_https_dyndns2_uri(
-    service_domain: &str,
-    ip_addr: &str,
-    hostname: &str,
-    username: &str,
-    password: &str,
-) -> String {
-    "https://".to_string()
-        + service_domain
-        + "/nic/update?hostname="
-        + hostname
-        + "&myip="
-        + ip_addr
 }
