@@ -29,14 +29,17 @@ async fn main() {
         Err(e) => return println!("configuration error:\n{}", e),
     };
 
+    // this is essentially a "copy" of the results on disk
     let mut results = match results::load_or_create_results(&config).await {
         Some(r) => r,
         None => return println!("results error:\nresults file not found."),
     };
 
-    results = ip_services::request_ip(results, &config).await;
-    results = domain_services::update_domains(results, &config).await;
+    // update in-memory results
+    results.ip_service_result = ip_services::request_ip(&results, &config).await;
+    results.domain_service_results = domain_services::update_domains(&results, &config).await;
 
+    // then write updated results to disk
     if let Err(e) = results::write_to_file(results, &config).await {
         return println!("file error:\n{}", e);
     };

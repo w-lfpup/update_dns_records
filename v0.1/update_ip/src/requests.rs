@@ -26,7 +26,7 @@ use crate::type_flyweight::ResponseJson;
 
 pub async fn request_http1_tls_response(
     req: Request<Empty<Bytes>>,
-) -> Result<Response<Incoming>, String> {
+) -> Result<ResponseJson, String> {
     let (host, addr) = match create_host_and_authority(&req) {
         Some(stream) => stream,
         _ => return Err("failed to get host and address from uri".to_string()),
@@ -51,7 +51,32 @@ pub async fn request_http1_tls_response(
         Err(e) => return Err(e.to_string()),
     };
 
-    Ok(res)
+    convert_response_to_json_struct(res).await
+}
+
+pub fn create_request_with_empty_body(url_string: &str) -> Result<Request<Empty<Bytes>>, String> {
+    let url = match http::Uri::try_from(url_string) {
+        Ok(u) => u,
+        Err(e) => return Err(e.to_string()),
+    };
+
+    let authority = match url.authority() {
+        Some(u) => u.clone(),
+        _ => return Err("authority missing in url".to_string()),
+    };
+
+    // add port when applicable
+
+    let req = match Request::builder()
+        .uri(url)
+        .header(hyper::header::HOST, authority.as_str())
+        .body(Empty::<Bytes>::new())
+    {
+        Ok(r) => r,
+        Err(e) => return Err(e.to_string()),
+    };
+
+    Ok(req)
 }
 
 // this has multiple "types" of errors
@@ -105,72 +130,7 @@ fn create_host_and_authority(req: &Request<Empty<Bytes>>) -> Option<(&str, Strin
     Some((host, authority))
 }
 
-pub async fn response_body_to_string(response: Response<Incoming>) -> Result<String, String> {
-    // asynchronously aggregate the chunks of the body
-    let body = match response.collect().await {
-        Ok(b) => b.aggregate(),
-        Err(e) => return Err(e.to_string()),
-    };
-
-    let ip_str = match io::read_to_string(body.reader()) {
-        Ok(b) => b,
-        Err(e) => return Err(e.to_string()),
-    };
-
-    Ok(ip_str.trim().to_string())
-}
-
-pub fn create_request_with_empty_body(url_string: &str) -> Result<Request<Empty<Bytes>>, String> {
-    let url = match http::Uri::try_from(url_string) {
-        Ok(u) => u,
-        Err(e) => return Err(e.to_string()),
-    };
-
-    let authority = match url.authority() {
-        Some(u) => u.clone(),
-        _ => return Err("authority missing in url".to_string()),
-    };
-
-    // add port when applicable
-
-    let req = match Request::builder()
-        .uri(url)
-        .header(hyper::header::HOST, authority.as_str())
-        .body(Empty::<Bytes>::new())
-    {
-        Ok(r) => r,
-        Err(e) => return Err(e.to_string()),
-    };
-
-    Ok(req)
-}
-
-/*
-    only adds ascii safe headers and header values.
-    w3c spec accepts opaque values.
-*/
-pub fn get_headers(res: &Response<Incoming>) -> HashMap<String, String> {
-    let mut headers = HashMap::<String, String>::new();
-    for (key, value) in res.headers() {
-        let value_str = match value.to_str() {
-            Ok(v) => v.to_string(),
-            _ => continue,
-        };
-        headers.insert(key.to_string(), value_str);
-    }
-    headers
-}
-
-pub fn get_timestamp() -> Result<u128, String> {
-    match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
-        Ok(n) => Ok(n.as_millis()),
-        Err(e) => Err(e.to_string()),
-    }
-}
-
-pub async fn convert_response_to_json_struct(
-    res: Response<Incoming>,
-) -> Result<ResponseJson, String> {
+async fn convert_response_to_json_struct(res: Response<Incoming>) -> Result<ResponseJson, String> {
     let timestamp = match get_timestamp() {
         Ok(n) => n,
         Err(e) => return Err(e),
@@ -190,4 +150,42 @@ pub async fn convert_response_to_json_struct(
         headers: headers,
         timestamp: timestamp,
     })
+}
+
+async fn response_body_to_string(response: Response<Incoming>) -> Result<String, String> {
+    // asynchronously aggregate the chunks of the body
+    let body = match response.collect().await {
+        Ok(b) => b.aggregate(),
+        Err(e) => return Err(e.to_string()),
+    };
+
+    let ip_str = match io::read_to_string(body.reader()) {
+        Ok(b) => b,
+        Err(e) => return Err(e.to_string()),
+    };
+
+    Ok(ip_str.trim().to_string())
+}
+
+/*
+    only adds ascii safe headers and header values.
+    w3c spec accepts opaque values.
+*/
+fn get_headers(res: &Response<Incoming>) -> HashMap<String, String> {
+    let mut headers = HashMap::<String, String>::new();
+    for (key, value) in res.headers() {
+        let value_str = match value.to_str() {
+            Ok(v) => v,
+            _ => continue,
+        };
+        headers.insert(key.to_string(), value_str.to_string());
+    }
+    headers
+}
+
+fn get_timestamp() -> Result<u128, String> {
+    match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
+        Ok(n) => Ok(n.as_millis()),
+        Err(e) => Err(e.to_string()),
+    }
 }

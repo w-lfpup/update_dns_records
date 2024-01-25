@@ -6,16 +6,16 @@ use crate::type_flyweight::{IpServiceResult, UpdateIpResults};
 
 mod address_as_body;
 
-pub async fn request_ip(mut results: UpdateIpResults, config: &Config) -> UpdateIpResults {
+pub async fn request_ip(results: &UpdateIpResults, config: &Config) -> IpServiceResult {
     // create new ip_service result
     // add previous address before requesting updated address
     // if ip service results fails, previous ip is preserved
     let mut ip_service_result = IpServiceResult::new();
-    
+
     // preserve previous address
     ip_service_result.prev_address = match &results.ip_service_result.address {
-  		Some(address) => Some(address.clone()),
-  		_ => results.ip_service_result.prev_address.clone()
+        Some(address) => Some(address.clone()),
+        _ => results.ip_service_result.prev_address.clone(),
     };
 
     // get service or return previous results
@@ -28,7 +28,7 @@ pub async fn request_ip(mut results: UpdateIpResults, config: &Config) -> Update
             ip_service_result
                 .errors
                 .push("failed to find ip service".to_string());
-            return results;
+            return ip_service_result;
         }
     };
 
@@ -41,9 +41,8 @@ pub async fn request_ip(mut results: UpdateIpResults, config: &Config) -> Update
     }
 
     ip_service_result.address_changed = has_address_changed(&results, &ip_service_result);
-    results.ip_service_result = ip_service_result;
 
-    results
+    ip_service_result
 }
 
 fn has_address_changed(results: &UpdateIpResults, ip_service_result: &IpServiceResult) -> bool {

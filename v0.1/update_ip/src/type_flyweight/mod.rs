@@ -53,7 +53,7 @@ pub struct DomainServices {
 impl IpServiceResult {
     pub fn new() -> IpServiceResult {
         IpServiceResult {
-        		prev_address: None,
+            prev_address: None,
             address: None,
             service: None,
             address_changed: false,

@@ -87,15 +87,14 @@ async fn create_build_result(
     address: &str,
 ) -> DomainResult {
     let request = match get_https_dyndns2_req(&domain, &address) {
-        Ok(s) => Some(s),
+        Ok(s) => s,
         Err(e) => {
             domain_result.errors.push(e.to_string());
-            None
+            return domain_result;
         }
     };
 
     // get response
-    let mut response = None;
     /*
     if let Some(req) = request {
         response = match requests::request_http1_tls_response(req).await {
@@ -110,12 +109,10 @@ async fn create_build_result(
 
     // create json-able struct from response
     // add to domain result
-    if let Some(res) = response {
-        match requests::convert_response_to_json_struct(res).await {
-            Ok(r) => domain_result.response = Some(r),
-            Err(e) => domain_result.errors.push(e.to_string()),
-        }
-    };
+    match requests::request_http1_tls_response(request).await {
+        Ok(r) => domain_result.response = Some(r),
+        Err(e) => domain_result.errors.push(e.to_string()),
+    }
 
     domain_result
 }

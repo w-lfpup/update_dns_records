@@ -21,22 +21,10 @@ pub async fn request_address_as_response_body(
         }
     };
 
-    let response = match requests::request_http1_tls_response(request).await {
-        Ok(r) => r,
+    ip_service_result.response = match requests::request_http1_tls_response(request).await {
+        Ok(r) => Some(r),
         Err(e) => {
             ip_service_result.errors.push(e);
-            return ip_service_result;
-        }
-    };
-		
-		// Result<(address, response), String>
-    // track response
-    ip_service_result.response = match requests::convert_response_to_json_struct(response).await {
-        Ok(j) => Some(j),
-        _ => {
-            ip_service_result
-                .errors
-                .push("failed to create jsonable response".to_string());
             None
         }
     };
