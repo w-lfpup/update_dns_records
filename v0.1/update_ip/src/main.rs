@@ -28,8 +28,8 @@ async fn main() {
     };
 
     // update in-memory results
-    results.ip_service_result = ip_services::request_ip(&results, &config).await;
-    results.domain_service_results = domain_services::update_domains(&results, &config).await;
+    results.ip_service_result = ip_services::request_ip(&config, &results).await;
+    results.domain_service_results = domain_services::update_domains(&config, &results).await;
 
     // then write updated results to disk
     if let Err(e) = results::write_to_file(results, &config).await {

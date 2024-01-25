@@ -14,6 +14,29 @@ use tokio::net::TcpStream;
 
 use crate::type_flyweight::ResponseJson;
 
+pub fn create_request_with_empty_body(url_string: &str) -> Result<Request<Empty<Bytes>>, String> {
+    let uri = match http::Uri::try_from(url_string) {
+        Ok(u) => u,
+        Err(e) => return Err(e.to_string()),
+    };
+
+    let (_, authority) = match get_host_and_authority(&uri) {
+        Some(u) => u.clone(),
+        _ => return Err("authority not found in url".to_string()),
+    };
+
+    let req = match Request::builder()
+        .uri(uri)
+        .header(hyper::header::HOST, authority.as_str())
+        .body(Empty::<Bytes>::new())
+    {
+        Ok(r) => r,
+        Err(e) => return Err(e.to_string()),
+    };
+
+    Ok(req)
+}
+
 pub async fn request_http1_tls_response(
     req: Request<Empty<Bytes>>,
 ) -> Result<ResponseJson, String> {
@@ -44,29 +67,6 @@ pub async fn request_http1_tls_response(
     convert_response_to_json_struct(res).await
 }
 
-pub fn create_request_with_empty_body(url_string: &str) -> Result<Request<Empty<Bytes>>, String> {
-    let uri = match http::Uri::try_from(url_string) {
-        Ok(u) => u,
-        Err(e) => return Err(e.to_string()),
-    };
-
-    let (_, authority) = match get_host_and_authority(&uri) {
-        Some(u) => u.clone(),
-        _ => return Err("authority not found in url".to_string()),
-    };
-
-    let req = match Request::builder()
-        .uri(url_string)
-        .header(hyper::header::HOST, authority.as_str())
-        .body(Empty::<Bytes>::new())
-    {
-        Ok(r) => r,
-        Err(e) => return Err(e.to_string()),
-    };
-
-    Ok(req)
-}
-
 fn get_host_and_authority(uri: &Uri) -> Option<(&str, String)> {
     let scheme = match uri.scheme() {
         Some(s) => s.as_str(),
@@ -74,9 +74,9 @@ fn get_host_and_authority(uri: &Uri) -> Option<(&str, String)> {
     };
 
     let port = match (uri.port(), scheme) {
-        (Some(p), _) => p.to_string(),
-        (None, "https") => "443".to_string(),
-        _ => "80".to_string(),
+        (Some(p), _) => p.as_u16(),
+        (None, "https") => 443,
+        _ => 80,
     };
 
     let host = match uri.host() {
@@ -84,7 +84,7 @@ fn get_host_and_authority(uri: &Uri) -> Option<(&str, String)> {
         _ => return None,
     };
 
-    let authority = host.to_string() + ":" + &port;
+    let authority = host.to_string() + ":" + &port.to_string();
 
     Some((host, authority))
 }

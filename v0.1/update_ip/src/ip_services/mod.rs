@@ -4,8 +4,7 @@ use crate::type_flyweight::{Config, IpServiceResult, UpdateIpResults};
 
 mod address_as_body;
 
-pub async fn request_ip(results: &UpdateIpResults, config: &Config) -> IpServiceResult {
-    // create new ip_service result
+pub async fn request_ip(config: &Config, results: &UpdateIpResults) -> IpServiceResult {
     // preserve the last run's "current" address as this run's previous address
     let mut ip_service_result = IpServiceResult::new();
     ip_service_result.prev_address = match &results.ip_service_result.address {
@@ -14,7 +13,7 @@ pub async fn request_ip(results: &UpdateIpResults, config: &Config) -> IpService
     };
 
     // get service uri and response type or return previous results
-    let (ip_service, response_type) = match get_ip_service(&results, &config) {
+    let (ip_service, response_type) = match get_random_ip_service(config, results) {
         Some(r) => r,
         _ => {
             ip_service_result
@@ -25,14 +24,13 @@ pub async fn request_ip(results: &UpdateIpResults, config: &Config) -> IpService
     };
 
     // preserve service uri and set service results based on response type
+    ip_service_result.service = Some(ip_service);
     match response_type {
-        _ => {
-            address_as_body::request_address_as_response_body(ip_service_result, &ip_service).await
-        }
+        _ => address_as_body::request_address_as_response_body(ip_service_result).await,
     }
 }
 
-fn get_ip_service(results: &UpdateIpResults, config: &Config) -> Option<(String, String)> {
+fn get_random_ip_service(config: &Config, results: &UpdateIpResults) -> Option<(String, String)> {
     if config.ip_services.len() == 0 {
         return None;
     }
@@ -52,7 +50,6 @@ fn get_ip_service(results: &UpdateIpResults, config: &Config) -> Option<(String,
         }
     }
 
-    // config.ip_services might change between runs
     // possibility prev service doesn't exist
     let length = match prev_index {
         Some(_index) => config.ip_services.len() - 1,

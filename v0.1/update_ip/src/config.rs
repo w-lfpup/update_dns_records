@@ -18,7 +18,7 @@ impl fmt::Display for ConfigError<'_> {
         match self {
             ConfigError::IoError(io_error) => write!(f, "{}", io_error),
             ConfigError::JsonError(json_error) => write!(f, "{}", json_error),
-            ConfigError::GenericError(generic_error) => write!(f, "{}", generic_error),
+            ConfigError::GenericError(generic_error) => write!(f, "{}", generic_error,),
         }
     }
 }
@@ -45,7 +45,7 @@ pub async fn from_path(path: &path::Path) -> Result<Config, ConfigError> {
         Err(e) => return Err(ConfigError::JsonError(e)),
     };
 
-    // find better way of verifying the parent directory exists
+    // find a way to verify the parent directory exists
     config.results_filepath = parent_dir.join(&config.results_filepath);
 
     Ok(config)
