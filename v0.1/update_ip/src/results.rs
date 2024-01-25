@@ -1,6 +1,5 @@
 use tokio::fs;
 
-// can use after mod declaration
 use crate::type_flyweight::{Config, UpdateIpResults};
 
 pub async fn load_or_create_results(config: &Config) -> Option<UpdateIpResults> {
@@ -22,7 +21,9 @@ pub async fn write_to_file(
         Err(e) => return Err(e.to_string()),
     };
 
-    let _ = fs::write(&config.results_filepath, json_str).await;
+    if let Err(e) = fs::write(&config.results_filepath, json_str).await {
+    	return Err(e.to_string())
+    };
 
     Ok(results)
 }
