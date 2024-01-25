@@ -6,10 +6,10 @@ use crate::type_flyweight::IpServiceResult;
 // request with empty body returns response body with IP Address
 pub async fn request_address_as_response_body(
     mut ip_service_result: IpServiceResult,
-    ip_service: &str,
+    ip_service: String,
 ) -> IpServiceResult {
-    // bail early if ip_service is None
-    let request = match requests::create_request_with_empty_body(ip_service) {
+    ip_service_result.service = Some(ip_service);
+    let request = match requests::create_request_with_empty_body(&ip_service) {
         Ok(req) => req,
         Err(e) => {
             ip_service_result.errors.push(e);
@@ -27,8 +27,6 @@ pub async fn request_address_as_response_body(
 
     // set address if request is successful
     if let Some(response) = &ip_service_result.response {
-        ip_service_result.service = Some(ip_service.to_string());
-
         if response.status_code != 200 {
             ip_service_result
                 .errors

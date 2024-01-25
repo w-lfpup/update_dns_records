@@ -26,9 +26,7 @@ pub async fn request_ip(config: &Config, results: &UpdateIpResults) -> IpService
 
     // preserve service uri and set service results based on response type
     match response_type {
-        _ => {
-            address_as_body::request_address_as_response_body(ip_service_result, &ip_service).await
-        }
+        _ => address_as_body::request_address_as_response_body(ip_service_result, ip_service).await,
     }
 }
 
