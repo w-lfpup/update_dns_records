@@ -1,5 +1,4 @@
-use rand;
-use rand::Rng;
+use rand::{thread_rng, Rng};
 
 use crate::type_flyweight::{Config, IpServiceResult, UpdateIpResults};
 
@@ -25,26 +24,11 @@ pub async fn request_ip(results: &UpdateIpResults, config: &Config) -> IpService
         }
     };
 
-    // preserve service uri
-    // set service results based on response type
-    ip_service_result.service = Some(ip_service);
-    ip_service_result = match response_type {
-        _ => address_as_body::request_address_as_response_body(ip_service_result).await,
-    };
-
-    ip_service_result.address_changed = has_address_changed(&results, &ip_service_result);
-
-    ip_service_result
-}
-
-fn has_address_changed(results: &UpdateIpResults, ip_service_result: &IpServiceResult) -> bool {
-    match (
-        &results.ip_service_result.address,
-        &ip_service_result.address,
-    ) {
-        (Some(prev_ip), Some(curr_ip)) => prev_ip != curr_ip,
-        (None, Some(_curr_ip)) => true,
-        _ => false,
+    // preserve service uri and set service results based on response type
+    match response_type {
+        _ => {
+            address_as_body::request_address_as_response_body(ip_service_result, &ip_service).await
+        }
     }
 }
 
@@ -75,7 +59,7 @@ fn get_ip_service(results: &UpdateIpResults, config: &Config) -> Option<(String,
         _ => config.ip_services.len(),
     };
 
-    let mut rng = rand::thread_rng();
+    let mut rng = thread_rng();
     let mut random_index = rng.gen_range(0..length);
     if let Some(index) = prev_index {
         if random_index >= index {

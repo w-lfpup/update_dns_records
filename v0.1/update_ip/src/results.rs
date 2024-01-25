@@ -12,6 +12,17 @@ pub async fn load_or_create_results(config: &Config) -> Option<UpdateIpResults> 
     Some(UpdateIpResults::new())
 }
 
+pub fn address_has_changed(update_ip_results: &UpdateIpResults) -> bool {
+    match (
+        &update_ip_results.ip_service_result.prev_address,
+        &update_ip_results.ip_service_result.address,
+    ) {
+        (Some(prev_ip), Some(curr_ip)) => prev_ip != curr_ip,
+        (None, Some(_curr_ip)) => true,
+        _ => false,
+    }
+}
+
 pub async fn write_to_file(
     results: UpdateIpResults,
     config: &Config,

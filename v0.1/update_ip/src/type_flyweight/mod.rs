@@ -6,6 +6,14 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path;
 
+// add domain services here
+// beware of hydra
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct DomainServices {
+    pub dyndns2: Option<Vec<Dyndns2>>,
+}
+
+// ip services are accounted for by response type
 // beware of hydra
 pub type IpServices = Vec<(String, String)>;
 
@@ -29,7 +37,6 @@ pub struct IpServiceResult {
     pub prev_address: Option<String>,
     pub address: Option<String>,
     pub service: Option<String>,
-    pub address_changed: bool,
     pub errors: Vec<String>,
     pub response: Option<ResponseJson>,
 }
@@ -55,12 +62,6 @@ pub struct Dyndns2 {
     pub password: String,
 }
 
-// add domain services here
-// beware of hydra
-#[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct DomainServices {
-    pub dyndns2: Option<Vec<Dyndns2>>,
-}
 
 impl IpServiceResult {
     pub fn new() -> IpServiceResult {
@@ -68,7 +69,6 @@ impl IpServiceResult {
             prev_address: None,
             address: None,
             service: None,
-            address_changed: false,
             errors: Vec::new(),
             response: None,
         }

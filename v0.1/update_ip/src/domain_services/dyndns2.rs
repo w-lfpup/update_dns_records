@@ -5,6 +5,7 @@ use http_body_util::Empty;
 use std::collections::HashMap;
 
 use crate::requests;
+use crate::results;
 use crate::type_flyweight::{Config, DomainResult, Dyndns2, UpdateIpResults};
 
 /*
@@ -22,7 +23,7 @@ const CLIENT_HEADER_VALUE: &str = "hyper/1.0 rust-client";
 // must return results
 pub async fn update_domains(
     mut domain_results: HashMap<String, DomainResult>,
-    prev_results: &UpdateIpResults,
+    results: &UpdateIpResults,
     config: &Config,
 ) -> HashMap<String, DomainResult> {
     // don't fetch results if there are no dyndns2 domains
@@ -32,35 +33,31 @@ pub async fn update_domains(
     };
 
     for domain in domains {
-        // someone could add or remove a domain from the config file between updates
-        let prev_domain_result = prev_results.domain_service_results.get(&domain.hostname);
-
-        // if address did not change and there's no retry, save previous domain_result
-        if !prev_results.ip_service_result.address_changed && !should_retry(prev_domain_result) {
-            if let Some(prev_result) = prev_domain_result {
-                domain_results.insert(domain.hostname.clone(), prev_result.clone());
-            }
+        // copy previous results initially
+        let prev_domain_result = results.domain_service_results.get(&domain.hostname);
+        if let Some(prev_result) = prev_domain_result {
+            domain_results.insert(domain.hostname.clone(), prev_result.clone());
+        }
+        
+        // continue if address did not change and there's no retry
+        if !results::address_has_changed(results) && !should_retry(prev_domain_result) {
             continue;
         }
 
-        //  if no address exists move on
-        //  the previous domain results could be lost at this junction
-        //	(updated: true, retry: false) does not qualify up above
-        //  add domain results before continue, looks awkward but *shrugs*
-        let address = match &prev_results.ip_service_result.address {
-            Some(d) => d,
-            _ => {
-                if let Some(prev_result) = prev_domain_result {
-                    domain_results.insert(domain.hostname.clone(), prev_result.clone());
-                }
-                continue;
-            }
+        //  get address or continue
+        let address = match (
+            &results.ip_service_result.prev_address,
+            &results.ip_service_result.address,
+        ) {
+            (Some(prev_addr), None) => prev_addr,
+            (_, Some(addr)) => addr,
+            _ => continue,
         };
 
         // build domain result
-        let mut domain_result = DomainResult::new(&domain.hostname);
-        domain_result = create_build_result(domain_result, domain, &address).await;
+        let domain_result = build_domain_result(&domain, &address).await;
 
+				// write over previous entry
         domain_results.insert(domain.hostname.clone(), domain_result);
     }
 
@@ -80,11 +77,12 @@ fn should_retry(domain_result: Option<&DomainResult>) -> bool {
     false
 }
 
-async fn create_build_result(
-    mut domain_result: DomainResult,
+async fn build_domain_result(
     domain: &Dyndns2,
     address: &str,
 ) -> DomainResult {
+    let mut domain_result = DomainResult::new(&domain.hostname);
+    
     let request = match get_https_dyndns2_req(&domain, &address) {
         Ok(s) => s,
         Err(e) => {
@@ -92,19 +90,6 @@ async fn create_build_result(
             return domain_result;
         }
     };
-
-    // get response
-    /*
-    if let Some(req) = request {
-        response = match requests::request_http1_tls_response(req).await {
-            Ok(r) => Some(r),
-            Err(e) => {
-                domain_result.errors.push(e.to_string());
-                None
-            }
-        };
-    }
-    */
 
     // create json-able struct from response
     // add to domain result

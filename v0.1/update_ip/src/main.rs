@@ -8,16 +8,6 @@ mod requests;
 mod results;
 mod type_flyweight;
 
-/*
-    Load configuration file.
-    Load previous results (or create new results).
-
-    The results struct is passed through a series of top-level functions.
-    Each function updates the results struct.
-
-    Finally the results struct is written to disk.
-*/
-
 #[tokio::main]
 async fn main() {
     let args = match env::args().nth(1) {
@@ -31,7 +21,7 @@ async fn main() {
         Err(e) => return println!("configuration error:\n{}", e),
     };
 
-    // this is essentially a "copy" of the results on disk
+    // "copy" of the results on disk
     let mut results = match results::load_or_create_results(&config).await {
         Some(r) => r,
         None => return println!("results error:\nresults file not found."),

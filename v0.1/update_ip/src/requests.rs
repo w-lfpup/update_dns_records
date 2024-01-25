@@ -149,7 +149,7 @@ async fn response_body_to_string(response: Response<Incoming>) -> Result<String,
         Err(e) => return Err(e.to_string()),
     };
 
-    Ok(ip_str.trim().to_string())
+    Ok(ip_str.to_string())
 }
 
 /*
