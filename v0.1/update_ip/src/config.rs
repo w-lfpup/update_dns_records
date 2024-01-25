@@ -18,7 +18,7 @@ impl fmt::Display for ConfigError<'_> {
         match self {
             ConfigError::IoError(io_error) => write!(f, "{}", io_error),
             ConfigError::JsonError(json_error) => write!(f, "{}", json_error),
-            ConfigError::GenericError(generic_error) => write!(f, "{}", generic_error),
+            ConfigError::GenericError(generic_error) => write!(f, "{}", generic_error,),
         }
     }
 }

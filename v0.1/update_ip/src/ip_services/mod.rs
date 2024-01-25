@@ -4,7 +4,7 @@ use crate::type_flyweight::{Config, IpServiceResult, UpdateIpResults};
 
 mod address_as_body;
 
-pub async fn request_ip(results: &UpdateIpResults, config: &Config) -> IpServiceResult {
+pub async fn request_ip(config: &Config, results: &UpdateIpResults) -> IpServiceResult {
     // create new ip_service result
     // preserve the last run's "current" address as this run's previous address
     let mut ip_service_result = IpServiceResult::new();
@@ -14,7 +14,7 @@ pub async fn request_ip(results: &UpdateIpResults, config: &Config) -> IpService
     };
 
     // get service uri and response type or return previous results
-    let (ip_service, response_type) = match get_ip_service(&results, &config) {
+    let (ip_service, response_type) = match get_ip_service(config, results) {
         Some(r) => r,
         _ => {
             ip_service_result
@@ -32,7 +32,7 @@ pub async fn request_ip(results: &UpdateIpResults, config: &Config) -> IpService
     }
 }
 
-fn get_ip_service(results: &UpdateIpResults, config: &Config) -> Option<(String, String)> {
+fn get_ip_service(config: &Config, results: &UpdateIpResults) -> Option<(String, String)> {
     if config.ip_services.len() == 0 {
         return None;
     }

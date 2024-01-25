@@ -5,8 +5,8 @@ use crate::type_flyweight::{Config, DomainResult, UpdateIpResults};
 mod dyndns2;
 
 pub async fn update_domains(
-    results: &UpdateIpResults,
     config: &Config,
+    results: &UpdateIpResults,
 ) -> HashMap<String, DomainResult> {
     // add more services here
     let mut domain_results = HashMap::<String, DomainResult>::new();

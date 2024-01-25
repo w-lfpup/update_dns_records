@@ -4,6 +4,7 @@ use http::Request;
 use http_body_util::Empty;
 use std::collections::HashMap;
 
+use crate::requests;
 use crate::results;
 use crate::type_flyweight::{Config, DomainResult, Dyndns2, UpdateIpResults};
 
@@ -87,15 +88,13 @@ async fn build_domain_result(domain: &Dyndns2, address: &str) -> DomainResult {
         }
     };
 
-		println!("test:\n{:?}", request);
+    // update domain service here
     // create json-able struct from response
     // add to domain result
-    /*
     match requests::request_http1_tls_response(request).await {
         Ok(r) => domain_result.response = Some(r),
         Err(e) => domain_result.errors.push(e.to_string()),
     }
-    */
 
     domain_result
 }
