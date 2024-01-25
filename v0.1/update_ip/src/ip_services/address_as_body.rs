@@ -32,7 +32,10 @@ pub async fn request_address_as_response_body(
     // set address if request is successful
     if let Some(response) = &ip_service_result.response {
         match response.body.parse::<net::IpAddr>() {
-            Ok(ip) => ip_service_result.address = Some(ip.to_string()),
+            Ok(ip) => {
+                ip_service_result.service = Some(ip_service.to_string());
+                ip_service_result.address = Some(ip.to_string());
+            }
             _ => ip_service_result
                 .errors
                 .push("ip address could not be parsed from response".to_string()),

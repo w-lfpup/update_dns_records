@@ -14,17 +14,6 @@ use tokio::net::TcpStream;
 
 use crate::type_flyweight::ResponseJson;
 
-/*
-    all upstream requests require a jsonable or (de)serializeable effort
-
-    requests can return a body reader if not string
-
-    serde can take a reader
-    and strings can take a reader
-
-    can let downstream functions decide
-*/
-
 pub async fn request_http1_tls_response(
     req: Request<Empty<Bytes>>,
 ) -> Result<ResponseJson, String> {
@@ -87,14 +76,14 @@ fn get_host_and_authority(uri: &Uri) -> Option<(&str, String)> {
     let port = match (uri.port(), scheme) {
         (Some(p), _) => p.to_string(),
         (None, "https") => "443".to_string(),
-        (_, _) => "80".to_string(),
+        _ => "80".to_string(),
     };
 
     let host = match uri.host() {
         Some(h) => h,
         _ => return None,
     };
-    
+
     let authority = host.to_string() + ":" + &port;
 
     Some((host, authority))

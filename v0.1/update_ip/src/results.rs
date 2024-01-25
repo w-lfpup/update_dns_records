@@ -22,7 +22,7 @@ pub async fn write_to_file(
     };
 
     if let Err(e) = fs::write(&config.results_filepath, json_str).await {
-    	return Err(e.to_string())
+        return Err(e.to_string());
     };
 
     Ok(results)
