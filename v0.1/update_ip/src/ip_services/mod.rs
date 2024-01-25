@@ -5,7 +5,6 @@ use crate::type_flyweight::{Config, IpServiceResult, UpdateIpResults};
 mod address_as_body;
 
 pub async fn request_ip(config: &Config, results: &UpdateIpResults) -> IpServiceResult {
-    // create new ip_service result
     // preserve the last run's "current" address as this run's previous address
     let mut ip_service_result = IpServiceResult::new();
     ip_service_result.prev_address = match &results.ip_service_result.address {
@@ -25,8 +24,9 @@ pub async fn request_ip(config: &Config, results: &UpdateIpResults) -> IpService
     };
 
     // preserve service uri and set service results based on response type
+    ip_service_result.service = Some(ip_service);
     match response_type {
-        _ => address_as_body::request_address_as_response_body(ip_service_result, ip_service).await,
+        _ => address_as_body::request_address_as_response_body(ip_service_result).await,
     }
 }
 
@@ -50,7 +50,6 @@ fn get_random_ip_service(config: &Config, results: &UpdateIpResults) -> Option<(
         }
     }
 
-    // config.ip_services might change between runs
     // possibility prev service doesn't exist
     let length = match prev_index {
         Some(_index) => config.ip_services.len() - 1,

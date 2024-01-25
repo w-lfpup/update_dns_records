@@ -26,7 +26,7 @@ pub fn create_request_with_empty_body(url_string: &str) -> Result<Request<Empty<
     };
 
     let req = match Request::builder()
-        .uri(url_string)
+        .uri(uri)
         .header(hyper::header::HOST, authority.as_str())
         .body(Empty::<Bytes>::new())
     {

@@ -6,8 +6,17 @@ use crate::type_flyweight::IpServiceResult;
 // request with empty body returns response body with IP Address
 pub async fn request_address_as_response_body(
     mut ip_service_result: IpServiceResult,
-    ip_service: String,
 ) -> IpServiceResult {
+    let ip_service = match &ip_service_result.service {
+        Some(service) => service,
+        _ => {
+            ip_service_result
+                .errors
+                .push("ip service not found".to_string());
+            return ip_service_result;
+        }
+    };
+
     let request = match requests::create_request_with_empty_body(&ip_service) {
         Ok(req) => req,
         Err(e) => {
@@ -16,7 +25,6 @@ pub async fn request_address_as_response_body(
         }
     };
 
-    ip_service_result.service = Some(ip_service);
     ip_service_result.response = match requests::request_http1_tls_response(request).await {
         Ok(r) => Some(r),
         Err(e) => {

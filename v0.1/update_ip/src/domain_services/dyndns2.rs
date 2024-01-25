@@ -65,7 +65,7 @@ pub async fn update_domains(
 }
 
 //	only valid retries are
-//		- request failed
+//		- server failed
 //		- service returns "911"
 fn should_retry(domain_result: Option<&DomainResult>) -> bool {
     if let Some(prev_result) = domain_result {

@@ -45,7 +45,7 @@ pub async fn from_path(path: &path::Path) -> Result<Config, ConfigError> {
         Err(e) => return Err(ConfigError::JsonError(e)),
     };
 
-    // find better way of verifying the parent directory exists
+    // find a way to verify the parent directory exists
     config.results_filepath = parent_dir.join(&config.results_filepath);
 
     Ok(config)
