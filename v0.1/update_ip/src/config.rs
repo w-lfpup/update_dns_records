@@ -3,7 +3,7 @@ use std::fmt;
 use std::path;
 use tokio::fs;
 
-use crate::type_flyweight::Config;
+use crate::type_flyweight::config::Config;
 
 pub enum ConfigError<'a> {
     IoError(std::io::Error),
