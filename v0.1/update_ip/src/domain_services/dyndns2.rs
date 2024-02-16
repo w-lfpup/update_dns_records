@@ -8,8 +8,8 @@ use crate::requests;
 use crate::results;
 
 use crate::type_flyweight::config::Config;
-use crate::type_flyweight::results::{DomainResult, UpdateIpResults};
 use crate::type_flyweight::dyndns2::Dyndns2;
+use crate::type_flyweight::results::{DomainResult, UpdateIpResults};
 
 /*
     Implements a subset of the dyndns2 protocol.
@@ -110,7 +110,7 @@ fn get_https_dyndns2_req(
     let auth_str = domain.username.to_string() + ":" + &domain.password;
     let auth = general_purpose::STANDARD.encode(&auth_str.as_bytes());
     let auth_value = "Basic ".to_string() + &auth;
-    
+
     match Request::builder()
         .uri(uri_str)
         .header(hyper::header::USER_AGENT, CLIENT_HEADER_VALUE)

@@ -2,8 +2,8 @@ use std::path;
 
 use serde::{Deserialize, Serialize};
 
-use crate::type_flyweight::dyndns2::Dyndns2;
 use crate::type_flyweight::cloudflare::Cloudflare;
+use crate::type_flyweight::dyndns2::Dyndns2;
 
 // add domain services here
 // beware of hydra
@@ -23,5 +23,3 @@ pub struct Config {
     pub ip_services: IpServices,
     pub domain_services: DomainServices,
 }
-
-

@@ -30,7 +30,11 @@ pub async fn from_path(path: &path::Path) -> Result<Config, ConfigError> {
 
     let parent_dir = match config_path.parent() {
         Some(p) => p,
-        _ => return Err(ConfigError::GenericError("parent directory of config not found")),
+        _ => {
+            return Err(ConfigError::GenericError(
+                "parent directory of config not found",
+            ))
+        }
     };
 
     let config_json = match fs::read_to_string(&config_path).await {

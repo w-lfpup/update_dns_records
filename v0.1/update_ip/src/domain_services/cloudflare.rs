@@ -6,10 +6,9 @@ use std::collections::HashMap;
 use crate::requests;
 use crate::results;
 
+use crate::type_flyweight::cloudflare::{Cloudflare, CloudflareRequestBody};
 use crate::type_flyweight::config::Config;
 use crate::type_flyweight::results::{DomainResult, UpdateIpResults};
-use crate::type_flyweight::cloudflare::{Cloudflare, CloudflareRequestBody};
-
 
 const CLIENT_HEADER_VALUE: &str = "hyper/1.0 rust-client";
 
@@ -52,7 +51,7 @@ pub async fn update_domains(
         domain_results.insert(domain.name.clone(), domain_result);
     }
 
-	domain_results
+    domain_results
 }
 
 // if a response code is 200 no retry, 400 no retry bad info just list it
@@ -60,11 +59,11 @@ pub async fn update_domains(
 fn should_retry(domain_result: Option<&DomainResult>) -> bool {
     if let Some(prev_result) = domain_result {
         if let Some(response) = &prev_result.response {
-		  		if 500 <= response.status_code && response.status_code < 600 {
-		  			return true
-		  		}
-		  		
-		  		return false
+            if 500 <= response.status_code && response.status_code < 600 {
+                return true;
+            }
+
+            return false;
         }
     }
 
@@ -116,27 +115,27 @@ fn get_cloudflare_req(
     ip_addr: &str,
 ) -> Result<Request<Full<Bytes>>, http::Error> {
     let uri_str = "https://api.cloudflare.com/client/v4/zones/".to_string()
-		  + &domain.zone_id
-		  + "/dns_records/"
-		  + &domain.dns_record_id;
-    
+        + &domain.zone_id
+        + "/dns_records/"
+        + &domain.dns_record_id;
+
     let auth_value = "Bearer ".to_string() + &domain.api_token;
-    
-    let body = CloudflareRequestBody{
-    	content: ip_addr.to_string(),
-			name: domain.name.clone(),
-			proxied: None,
-			r#type: "A".to_string(),
-			comment: None,
-			tags: None,
-			ttl: None,
+
+    let body = CloudflareRequestBody {
+        content: ip_addr.to_string(),
+        name: domain.name.clone(),
+        proxied: None,
+        r#type: "A".to_string(),
+        comment: None,
+        tags: None,
+        ttl: None,
     };
-    
+
     let body_str = match serde_json::to_string(&body) {
-    	Ok(json_str) => json_str,
-    	Err(_) => "".to_string(),
+        Ok(json_str) => json_str,
+        Err(_) => "".to_string(),
     };
-    
+
     match Request::builder()
         .uri(uri_str)
         .header(hyper::header::USER_AGENT, CLIENT_HEADER_VALUE)
@@ -148,4 +147,3 @@ fn get_cloudflare_req(
         Err(e) => Err(e),
     }
 }
-
