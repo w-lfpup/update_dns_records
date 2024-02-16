@@ -2,7 +2,7 @@ use bytes::Buf;
 use bytes::Bytes;
 use http::Uri;
 use http::{Request, Response};
-use http_body_util::{BodyExt, Empty};
+use http_body_util::{BodyExt, Empty, Full};
 use hyper::body::Incoming;
 use hyper::client::conn::http1;
 use hyper_util::rt::TokioIo;
@@ -39,6 +39,36 @@ pub fn create_request_with_empty_body(url_string: &str) -> Result<Request<Empty<
 
 pub async fn request_http1_tls_response(
     req: Request<Empty<Bytes>>,
+) -> Result<ResponseJson, String> {
+    let (host, authority) = match get_host_and_authority(&req.uri()) {
+        Some(stream) => stream,
+        _ => return Err("failed to get authority from uri".to_string()),
+    };
+
+    let io = match create_tls_stream(&host, &authority).await {
+        Ok(stream) => stream,
+        Err(e) => return Err(e),
+    };
+
+    let (mut sender, conn) = match http1::handshake(io).await {
+        Ok(handshake) => handshake,
+        Err(e) => return Err(e.to_string()),
+    };
+
+    tokio::task::spawn(async move {
+        if let Err(_err) = conn.await { /* log connection error */ }
+    });
+
+    let res = match sender.send_request(req).await {
+        Ok(res) => res,
+        Err(e) => return Err(e.to_string()),
+    };
+
+    convert_response_to_json_struct(res).await
+}
+
+pub async fn boxed_request_http1_tls_response(
+    req: Request<Full<Bytes>>,
 ) -> Result<ResponseJson, String> {
     let (host, authority) = match get_host_and_authority(&req.uri()) {
         Some(stream) => stream,
