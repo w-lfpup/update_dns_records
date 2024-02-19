@@ -2,12 +2,15 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Cloudflare {
-    pub name: String,
     pub email: String,
-    pub api_token: String,
     pub zone_id: String,
     pub dns_record_id: String,
-    pub ttl: usize,
+    pub api_token: String,
+    pub name: String,
+    pub proxied: Option<bool>,
+    pub comment: Option<String>,
+    pub tags: Option<Vec<String>>,
+    pub ttl: Option<usize>,
 }
 
 // following types are based on:

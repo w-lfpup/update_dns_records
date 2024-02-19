@@ -10,7 +10,12 @@ use crate::type_flyweight::cloudflare::{Cloudflare, CloudflareRequestBody};
 use crate::type_flyweight::config::Config;
 use crate::type_flyweight::results::{DomainResult, UpdateIpResults};
 
-const CLIENT_HEADER_VALUE: &str = "hyper/1.0 rust-client";
+/*
+https://developers.cloudflare.com/api/operations/dns-records-for-a-zone-patch-dns-record
+
+PATCH Request
+Only update changed parameters
+*/
 
 pub async fn update_domains(
     mut domain_results: HashMap<String, DomainResult>,
@@ -98,26 +103,6 @@ async fn build_domain_result(domain: &Cloudflare, address: &str) -> DomainResult
     domain_result
 }
 
-/*
-curl --request PUT \
-  --url https://api.cloudflare.com/client/v4/zones/zone_id/dns_records/dns_record_id \
-  --header 'Content-Type: application/json' \
-  --header 'X-Auth-Email: ' \
-  --data '{
-  "content": "198.51.100.4",
-  "name": "example.com",
-  "proxied": false,
-  "type": "A",
-  "comment": "Domain verification record",
-  "tags": [
-    "owner:dns-team"
-  ],
-  "ttl": 3600
-}'
-
-https://developers.cloudflare.com/api/operations/dns-records-for-a-zone-update-dns-record
-*/
-
 // bytes as body response
 // make error more noticable
 fn get_cloudflare_req(
@@ -134,22 +119,20 @@ fn get_cloudflare_req(
     let body = CloudflareRequestBody {
         content: ip_addr.to_string(),
         name: domain.name.clone(),
-        proxied: Some(false),
+        proxied: domain.proxied.clone(),
         r#type: "A".to_string(),
-        comment: None,
-        tags: None,
-        ttl: Some(60),
+        comment: domain.comment.clone(),
+        tags: domain.tags.clone(),
+        ttl: domain.ttl.clone(),
     };
 
     let body_str = match serde_json::to_string(&body) {
         Ok(json_str) => json_str,
         Err(_) => "".to_string(),
     };
-    
-    println!("body_str:\n{}", body_str);
 
     match Request::builder()
-    		.method("PUT")
+    		.method("PATCH")
         .uri(uri_str)
         .header(hyper::header::HOST, "api.cloudflare.com")
         .header(hyper::header::CONTENT_TYPE, "application/json")
