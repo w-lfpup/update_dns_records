@@ -7,6 +7,7 @@ pub struct Cloudflare {
     pub api_token: String,
     pub zone_id: String,
     pub dns_record_id: String,
+    pub ttl: usize,
 }
 
 // following types are based on:

@@ -44,9 +44,11 @@ pub async fn update_domains(
             _ => continue,
         };
 
+				println!("get results");
         // build domain result
         let domain_result = build_domain_result(&domain, &address).await;
 
+				println!("write over results");
         // write over previous entry
         domain_results.insert(domain.name.clone(), domain_result);
     }
@@ -62,12 +64,10 @@ fn should_retry(domain_result: Option<&DomainResult>) -> bool {
             if 500 <= response.status_code && response.status_code < 600 {
                 return true;
             }
-
-            return false;
         }
     }
 
-    true
+    false
 }
 
 async fn build_domain_result(domain: &Cloudflare, address: &str) -> DomainResult {
@@ -80,12 +80,18 @@ async fn build_domain_result(domain: &Cloudflare, address: &str) -> DomainResult
             return domain_result;
         }
     };
+    
+    println!("{:?}", &request);
 
     // update domain service here
     // create json-able struct from response
     // add to domain result
+    
     match requests::boxed_request_http1_tls_response(request).await {
-        Ok(r) => domain_result.response = Some(r),
+        Ok(r) => {
+        	println!("{:?}", &r);
+        	domain_result.response = Some(r);
+        } 
         Err(e) => domain_result.errors.push(e.to_string()),
     }
 
@@ -96,20 +102,24 @@ async fn build_domain_result(domain: &Cloudflare, address: &str) -> DomainResult
 curl --request PUT \
   --url https://api.cloudflare.com/client/v4/zones/zone_id/dns_records/dns_record_id \
   --header 'Content-Type: application/json' \
-  --header 'X-Auth-Email: brian.t.vann@gmail.com' \
-  --header 'Authorization: Bearer api_key' \
+  --header 'X-Auth-Email: ' \
   --data '{
-  "content": "0.0.0.0",
+  "content": "198.51.100.4",
   "name": "example.com",
   "proxied": false,
   "type": "A",
   "comment": "Domain verification record",
-  "ttl": 60
+  "tags": [
+    "owner:dns-team"
+  ],
+  "ttl": 3600
 }'
+
+https://developers.cloudflare.com/api/operations/dns-records-for-a-zone-update-dns-record
 */
 
 // bytes as body response
-// make error
+// make error more noticable
 fn get_cloudflare_req(
     domain: &Cloudflare,
     ip_addr: &str,
@@ -124,21 +134,25 @@ fn get_cloudflare_req(
     let body = CloudflareRequestBody {
         content: ip_addr.to_string(),
         name: domain.name.clone(),
-        proxied: None,
+        proxied: Some(false),
         r#type: "A".to_string(),
         comment: None,
         tags: None,
-        ttl: None,
+        ttl: Some(60),
     };
 
     let body_str = match serde_json::to_string(&body) {
         Ok(json_str) => json_str,
         Err(_) => "".to_string(),
     };
+    
+    println!("body_str:\n{}", body_str);
 
     match Request::builder()
+    		.method("PUT")
         .uri(uri_str)
-        .header(hyper::header::USER_AGENT, CLIENT_HEADER_VALUE)
+        .header(hyper::header::HOST, "api.cloudflare.com")
+        .header(hyper::header::CONTENT_TYPE, "application/json")
         .header("X-Auth-Email", &domain.email)
         .header(hyper::header::AUTHORIZATION, auth_value)
         .body(Full::new(Bytes::from(body_str)))
