@@ -5,7 +5,6 @@ use std::collections::HashMap;
 
 use crate::requests;
 use crate::results;
-
 use crate::type_flyweight::cloudflare::{Cloudflare, CloudflareRequestBody};
 use crate::type_flyweight::config::Config;
 use crate::type_flyweight::results::{DomainResult, UpdateIpResults};
@@ -49,11 +48,9 @@ pub async fn update_domains(
             _ => continue,
         };
 
-        println!("get results");
         // build domain result
         let domain_result = build_domain_result(&domain, &address).await;
 
-        println!("write over results");
         // write over previous entry
         domain_results.insert(domain.name.clone(), domain_result);
     }
@@ -81,34 +78,23 @@ async fn build_domain_result(domain: &Cloudflare, address: &str) -> DomainResult
     let request = match get_cloudflare_req(&domain, &address) {
         Ok(s) => s,
         Err(e) => {
-            domain_result.errors.push(e.to_string());
+            domain_result.errors.push(e);
             return domain_result;
         }
     };
 
-    println!("{:?}", &request);
-
     // update domain service here
     // create json-able struct from response
     // add to domain result
-
     match requests::boxed_request_http1_tls_response(request).await {
-        Ok(r) => {
-            println!("{:?}", &r);
-            domain_result.response = Some(r);
-        }
-        Err(e) => domain_result.errors.push(e.to_string()),
+        Ok(r) => domain_result.response = Some(r),
+        Err(e) => domain_result.errors.push(e),
     }
 
     domain_result
 }
 
-// bytes as body response
-// make error more noticable
-fn get_cloudflare_req(
-    domain: &Cloudflare,
-    ip_addr: &str,
-) -> Result<Request<Full<Bytes>>, http::Error> {
+fn get_cloudflare_req(domain: &Cloudflare, ip_addr: &str) -> Result<Request<Full<Bytes>>, String> {
     let uri_str = "https://api.cloudflare.com/client/v4/zones/".to_string()
         + &domain.zone_id
         + "/dns_records/"
@@ -128,7 +114,7 @@ fn get_cloudflare_req(
 
     let body_str = match serde_json::to_string(&body) {
         Ok(json_str) => json_str,
-        Err(_) => "".to_string(),
+        Err(e) => return Err(e.to_string()),
     };
 
     match Request::builder()
@@ -141,6 +127,6 @@ fn get_cloudflare_req(
         .body(Full::new(Bytes::from(body_str)))
     {
         Ok(req) => Ok(req),
-        Err(e) => Err(e),
+        Err(e) => Err(e.to_string()),
     }
 }

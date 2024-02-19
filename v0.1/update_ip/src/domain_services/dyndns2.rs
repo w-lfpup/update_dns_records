@@ -6,7 +6,6 @@ use std::collections::HashMap;
 
 use crate::requests;
 use crate::results;
-
 use crate::type_flyweight::config::Config;
 use crate::type_flyweight::dyndns2::Dyndns2;
 use crate::type_flyweight::results::{DomainResult, UpdateIpResults};
@@ -86,38 +85,45 @@ async fn build_domain_result(domain: &Dyndns2, address: &str) -> DomainResult {
     let request = match get_https_dyndns2_req(&domain, &address) {
         Ok(s) => s,
         Err(e) => {
-            domain_result.errors.push(e.to_string());
+            domain_result.errors.push(e);
             return domain_result;
         }
     };
 
-    // update domain service here
+    // update domain service
     // create json-able struct from response
     // add to domain result
     match requests::request_http1_tls_response(request).await {
         Ok(r) => domain_result.response = Some(r),
-        Err(e) => domain_result.errors.push(e.to_string()),
+        Err(e) => domain_result.errors.push(e),
     }
 
     domain_result
 }
 
-fn get_https_dyndns2_req(
-    domain: &Dyndns2,
-    ip_addr: &str,
-) -> Result<Request<Empty<Bytes>>, http::Error> {
+fn get_https_dyndns2_req(domain: &Dyndns2, ip_addr: &str) -> Result<Request<Empty<Bytes>>, String> {
     let uri_str = domain.service_uri.clone() + "?hostname=" + &domain.hostname + "&myip=" + ip_addr;
+    let uri = match uri_str.parse::<http::Uri>() {
+        Ok(u) => u,
+        Err(e) => return Err(e.to_string()),
+    };
+    let host = match uri.host() {
+        Some(u) => u.to_string(),
+        None => return Err("host not found in uri".to_string()),
+    };
+
     let auth_str = domain.username.to_string() + ":" + &domain.password;
     let auth = general_purpose::STANDARD.encode(&auth_str.as_bytes());
     let auth_value = "Basic ".to_string() + &auth;
 
     match Request::builder()
-        .uri(uri_str)
+        .uri(uri)
+        .header(hyper::header::HOST, host)
         .header(hyper::header::USER_AGENT, CLIENT_HEADER_VALUE)
         .header(hyper::header::AUTHORIZATION, auth_value)
         .body(Empty::<Bytes>::new())
     {
         Ok(req) => Ok(req),
-        Err(e) => Err(e),
+        Err(e) => Err(e.to_string()),
     }
 }
