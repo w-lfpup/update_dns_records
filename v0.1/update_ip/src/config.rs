@@ -3,9 +3,7 @@ use std::fmt;
 use std::path;
 use tokio::fs;
 
-use crate::type_flyweight::Config;
-
-const PARENT_NOT_FOUND_ERR: &str = "parent directory of config not found";
+use crate::type_flyweight::config::Config;
 
 pub enum ConfigError<'a> {
     IoError(std::io::Error),
@@ -32,7 +30,11 @@ pub async fn from_path(path: &path::Path) -> Result<Config, ConfigError> {
 
     let parent_dir = match config_path.parent() {
         Some(p) => p,
-        _ => return Err(ConfigError::GenericError(PARENT_NOT_FOUND_ERR)),
+        _ => {
+            return Err(ConfigError::GenericError(
+                "parent directory of config not found",
+            ))
+        }
     };
 
     let config_json = match fs::read_to_string(&config_path).await {

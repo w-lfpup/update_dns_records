@@ -1,6 +1,7 @@
 use rand::{thread_rng, Rng};
 
-use crate::type_flyweight::{Config, IpServiceResult, UpdateIpResults};
+use crate::type_flyweight::config::Config;
+use crate::type_flyweight::results::{IpServiceResult, UpdateIpResults};
 
 mod address_as_body;
 
