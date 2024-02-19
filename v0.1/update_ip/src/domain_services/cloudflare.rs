@@ -49,11 +49,11 @@ pub async fn update_domains(
             _ => continue,
         };
 
-				println!("get results");
+        println!("get results");
         // build domain result
         let domain_result = build_domain_result(&domain, &address).await;
 
-				println!("write over results");
+        println!("write over results");
         // write over previous entry
         domain_results.insert(domain.name.clone(), domain_result);
     }
@@ -85,18 +85,18 @@ async fn build_domain_result(domain: &Cloudflare, address: &str) -> DomainResult
             return domain_result;
         }
     };
-    
+
     println!("{:?}", &request);
 
     // update domain service here
     // create json-able struct from response
     // add to domain result
-    
+
     match requests::boxed_request_http1_tls_response(request).await {
         Ok(r) => {
-        	println!("{:?}", &r);
-        	domain_result.response = Some(r);
-        } 
+            println!("{:?}", &r);
+            domain_result.response = Some(r);
+        }
         Err(e) => domain_result.errors.push(e.to_string()),
     }
 
@@ -132,7 +132,7 @@ fn get_cloudflare_req(
     };
 
     match Request::builder()
-    		.method("PATCH")
+        .method("PATCH")
         .uri(uri_str)
         .header(hyper::header::HOST, "api.cloudflare.com")
         .header(hyper::header::CONTENT_TYPE, "application/json")
