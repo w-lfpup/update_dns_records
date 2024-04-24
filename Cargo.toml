@@ -1,5 +1,5 @@
 [workspace]
-members = [ "ip_services", "requests","results"]
+members = [ "dyndns2", "ip_services", "requests","results"]
 
 
 [workspace.dependencies]
