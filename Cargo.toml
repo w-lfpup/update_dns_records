@@ -1,5 +1,5 @@
 [workspace]
-members = [ "requests","results"]
+members = [ "ip_services", "requests","results"]
 
 
 [workspace.dependencies]
