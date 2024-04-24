@@ -4,6 +4,8 @@ use results::{IpServiceResult, UpdateIpResults};
 
 mod address_as_body;
 
+// ip services are accounted for by response type
+// beware of hydra
 pub type IpServices = Vec<(String, String)>;
 
 pub async fn request_ip(ip_services: &IpServices, results: &UpdateIpResults) -> IpServiceResult {
