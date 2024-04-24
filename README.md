@@ -8,7 +8,7 @@ The `update_ip` application requires a valid configuration to run.
 
 An example of a JSON configuration file is given below.
 
-```JSON
+```
 {
 	"results_filepath": "./path_to_results.json",
 	"ip_services": [
@@ -17,20 +17,20 @@ An example of a JSON configuration file is given below.
 	],
 	"domain_services": {
 		"dyndns2": [{
-				"hostname": "something.com",
+				"hostname": string,
 				"username": string,
 				"password": string
 		}]
 		"cloudflare": [{
-		  name: "something2.com",
-		  email: string,
-		  zone_id: string,
-		  dns_record_id: string,
-		  api_token: String,
-		  proxied: bool | null,
-		  comment: string | null,
-		  tags: []string | null,
-		  ttl: number | null,
+		  "name": "something2.com",
+		  "email": string,
+		  "zone_id": string,
+		  "dns_record_id": string,
+		  "api_token": string,
+		  "proxied": bool | none,
+		  "comment": string | none,
+		  "tags": []string | none,
+		  "ttl": number | none,
 		}]
 	}
 }
