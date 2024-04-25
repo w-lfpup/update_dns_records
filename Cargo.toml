@@ -1,5 +1,6 @@
 [workspace]
 members = [ "cloudflare", "config", "domain_services", "dyndns2", "ip_services", "requests","results"]
+resolver = "2"
 
 [workspace.dependencies]
 serde_json = "1"
