@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::path::PathBuf;
 use tokio::fs;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -63,7 +64,7 @@ impl UpdateIpResults {
     }
 }
 
-pub async fn load_or_create_results(results_filepath: &str) -> Option<UpdateIpResults> {
+pub async fn load_or_create_results(results_filepath: &PathBuf) -> Option<UpdateIpResults> {
     if let Ok(json_as_str) = fs::read_to_string(&results_filepath).await {
         if let Ok(r) = serde_json::from_str(&json_as_str) {
             return Some(r);
@@ -86,7 +87,7 @@ pub fn address_has_changed(update_ip_results: &UpdateIpResults) -> bool {
 
 pub async fn write_to_file(
     results: UpdateIpResults,
-    results_filepath: &str,
+    results_filepath: &PathBuf,
 ) -> Result<UpdateIpResults, String> {
     let json_str = match serde_json::to_string_pretty(&results) {
         Ok(f) => f,
