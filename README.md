@@ -4,7 +4,7 @@ Update Dynamic DNS services with rust and hyper.
 
 ## How to use
 
-The `update_ip` application requires a valid configuration to run.
+The `update_ip` application requires a valid configuration to run. Only the properties `results_filepath` and `ip_services`. All other properties are associated with services like `dyndns2` or `cloudflare`.
 
 An example of a JSON configuration file is given below.
 
@@ -15,24 +15,23 @@ An example of a JSON configuration file is given below.
 		["https://checkip.amazonaws.com/", "address_as_body"],
 		["https://domains.google.com/checkip", "address_as_body"]
 	],
-	"domain_services": {
-		"dyndns2": [{
-				"hostname": string,
-				"username": string,
-				"password": string
-		}]
-		"cloudflare": [{
-		  "name": "something2.com",
-		  "email": string,
-		  "zone_id": string,
-		  "dns_record_id": string,
-		  "api_token": string,
-		  "proxied": bool | none,
-		  "comment": string | none,
-		  "tags": []string | none,
-		  "ttl": number | none,
-		}]
-	}
+	"dyndns2": [{
+		"service_uri": string,
+		"hostname": string,
+		"username": string,
+		"password": string
+	}]
+	"cloudflare": [{
+		"name": "something2.com",
+		"email": string,
+		"zone_id": string,
+		"dns_record_id": string,
+		"api_token": string,
+		"proxied": bool | none,
+		"comment": string | none,
+		"tags": []string | none,
+		"ttl": number | none,
+	}]
 }
 ```
 
