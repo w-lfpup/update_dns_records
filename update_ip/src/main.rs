@@ -27,8 +27,7 @@ async fn main() {
 
     // update results
     results.ip_service_result = ip_services::request_ip(&config.ip_services, &results).await;
-    results.domain_service_results =
-        domain_services::update_domains(&config.domain_services, &results).await;
+    results.domain_service_results = domain_services::update_domains(&config, &results).await;
 
     // write updated results to disk
     if let Err(e) = results::write_to_file(results, &config.results_filepath).await {

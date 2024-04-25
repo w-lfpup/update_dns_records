@@ -12,20 +12,14 @@ use ip_services::IpServices;
 
 // add domain services here
 // beware of hydra
-// prepare for modules by features
-#[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct DomainServices {
-    #[cfg(feature = "dyndns2")]
-    pub dyndns2: Vec<Dyndns2>,
-    #[cfg(feature = "cloudflare")]
-    pub cloudflare: Vec<Cloudflare>,
-}
-
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Config {
     pub results_filepath: path::PathBuf,
     pub ip_services: IpServices,
-    pub domain_services: DomainServices,
+    #[cfg(feature = "dyndns2")]
+    pub dyndns2: Vec<Dyndns2>,
+    #[cfg(feature = "cloudflare")]
+    pub cloudflare: Vec<Cloudflare>,
 }
 
 pub enum ConfigError<'a> {
