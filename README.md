@@ -4,9 +4,16 @@ Update Dynamic DNS services with rust and hyper.
 
 ## How to use
 
-The `update_ip` application requires a valid configuration to run. Only the properties `results_filepath` and `ip_services`. All other properties are associated with services like `dyndns2` or `cloudflare`.
+The `update_ip` application requires a valid configuration to run.
 
-An example of a JSON configuration file is given below.
+A valid JSON configuration example can be found at
+`./update_ip.example.json`
+
+The `results_filepath` and `ip_services` properties are required. 
+
+The `results_filepath` property can be relative to the location of the `config` file.
+
+The `ip_services` property defines a list of services with a `url` and its `response_type`.
 
 ```
 {
@@ -15,12 +22,20 @@ An example of a JSON configuration file is given below.
 		["https://checkip.amazonaws.com/", "address_as_body"],
 		["https://domains.google.com/checkip", "address_as_body"]
 	],
+}
+```
+
+All other properties are associated with rust `features` which are matched to services like `cloudflare` or the `dyndns2` standard.
+
+```
+{
+	...
 	"dyndns2": [{
 		"service_uri": string,
 		"hostname": string,
 		"username": string,
 		"password": string
-	}]
+	}],
 	"cloudflare": [{
 		"name": "something2.com",
 		"email": string,
@@ -35,34 +50,22 @@ An example of a JSON configuration file is given below.
 }
 ```
 
-The `results_filepath` property can be relative to the location of the `config` file.
-
-The `ip_services` property defines a list of services with a `url` and its `response_type`.
-
-The `domain_services` property lists domains to update by service or protocol.
-
-However this could potentially support any protocol.
-
-A valid JSON configuration example can be found at
-`update_ip/v0.1/update_ip.example.json`
-
 ### Install update_ip
 
-Execute the following to install `update_ip`.
+Execute the following to install `update_ip` and support `dyndns2`
 
 ```
-git clone https://github.com/herebythere/update_ip
-cargo install --path update_ip/update_ip
+cargo install --path update_ip --features dyndns2
 ```
 
 ### Install by features
 
 The `update_ip` repo has support for multiple services via rust `features`.
 
-For minimal builds, use the `--features` flag to only include neccessary `services`.
+Use the `--features` flag to include a `service`.
 
 ```
-cargo install --path update_ip/update_ip --features dyndns2
+cargo install --path update_ip/update_ip --features cloudflare
 ```
 
 ### Run update_ip
@@ -75,14 +78,26 @@ The `update_ip` application accepts one argument from the command line:
 update_ip <path_to_configuration_file>
 ```
 
-The results of the operation will be written to the location defined by the `results_filepath` property of the config file.
+The results of the `update_ip` will be written to the `results_filepath` property of the config file.
 
 ## Available services
 
 The `update_ip` application provides support for the following services:
 
-- `dyndns2` protocol
+- `dyndns2`
 - `cloudflare`
+
+### Dyndns2
+
+The `service_uri` property provides `update_ip` a `url` for the `dyndns2` protocol to extend.
+
+As in, `path` and `parameters` will be added to the `url` found in the `service_uri` property.
+
+So `https://example.com` will become:
+
+```
+https://example.com/nic/update?hostname=subdomain.yourdomain.com&myip=1.2.3.4
+```
 
 ## Licence
 

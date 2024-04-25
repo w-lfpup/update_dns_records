@@ -15,6 +15,6 @@ cloudflare = { path = "../cloudflare" }
 dyndns2 = { path = "../dyndns2" }
 
 [features]
-default = ["dyndns2", "cloudflare"]
+default = []
 dyndns2 = []
 cloudflare = []
