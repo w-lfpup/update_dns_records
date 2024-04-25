@@ -1,11 +1,14 @@
 use rand::{thread_rng, Rng};
 
-use crate::type_flyweight::config::Config;
-use crate::type_flyweight::results::{IpServiceResult, UpdateIpResults};
+use results::{IpServiceResult, UpdateIpResults};
 
 mod address_as_body;
 
-pub async fn request_ip(config: &Config, results: &UpdateIpResults) -> IpServiceResult {
+// ip services are accounted for by response type
+// beware of hydra
+pub type IpServices = Vec<(String, String)>;
+
+pub async fn request_ip(ip_services: &IpServices, results: &UpdateIpResults) -> IpServiceResult {
     // preserve the last run's "current" address as this run's previous address
     let mut ip_service_result = IpServiceResult::new();
     ip_service_result.prev_address = match &results.ip_service_result.address {
@@ -14,7 +17,7 @@ pub async fn request_ip(config: &Config, results: &UpdateIpResults) -> IpService
     };
 
     // get service uri and response type or return previous results
-    let (ip_service, response_type) = match get_random_ip_service(config, results) {
+    let (ip_service, response_type) = match get_random_ip_service(ip_services, results) {
         Some(r) => r,
         _ => {
             ip_service_result
@@ -31,19 +34,22 @@ pub async fn request_ip(config: &Config, results: &UpdateIpResults) -> IpService
     }
 }
 
-fn get_random_ip_service(config: &Config, results: &UpdateIpResults) -> Option<(String, String)> {
-    if config.ip_services.len() == 0 {
+fn get_random_ip_service(
+    ip_services: &IpServices,
+    results: &UpdateIpResults,
+) -> Option<(String, String)> {
+    if ip_services.len() == 0 {
         return None;
     }
 
-    if config.ip_services.len() == 1 {
-        return Some(config.ip_services[0].clone());
+    if ip_services.len() == 1 {
+        return Some(ip_services[0].clone());
     }
 
     // get previous service index
     let mut prev_index = None;
     if let Some(service) = &results.ip_service_result.service {
-        for (index, (url, _ip_service_type)) in config.ip_services.iter().enumerate() {
+        for (index, (url, _ip_service_type)) in ip_services.iter().enumerate() {
             if url == service {
                 prev_index = Some(index);
                 break;
@@ -53,8 +59,8 @@ fn get_random_ip_service(config: &Config, results: &UpdateIpResults) -> Option<(
 
     // possibility prev service doesn't exist
     let length = match prev_index {
-        Some(_index) => config.ip_services.len() - 1,
-        _ => config.ip_services.len(),
+        Some(_index) => ip_services.len() - 1,
+        _ => ip_services.len(),
     };
 
     let mut rng = thread_rng();
@@ -65,5 +71,5 @@ fn get_random_ip_service(config: &Config, results: &UpdateIpResults) -> Option<(
         }
     }
 
-    return Some(config.ip_services[random_index].clone());
+    return Some(ip_services[random_index].clone());
 }

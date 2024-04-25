@@ -4,12 +4,10 @@
 		["https://checkip.amazonaws.com/", "address_as_body"],
 		["https://domains.google.com/checkip", "address_as_body"]
 	],
-	"domain_services": {
-		"dyndns2": [{
-				"service_uri": "https://domains.google.com/nic/update",
-				"hostname": "something.com",
-				"username": "...",
-				"password": "..."
-		}]
-	}
+	"dyndns2": [{
+			"service_uri": "https://domains.google.com/nic/update",
+			"hostname": "something.com",
+			"username": "...",
+			"password": "..."
+	}]
 }

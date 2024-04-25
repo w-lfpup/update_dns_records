@@ -12,7 +12,7 @@ use std::io;
 use std::time::SystemTime;
 use tokio::net::TcpStream;
 
-use crate::type_flyweight::results::ResponseJson;
+use results::ResponseJson;
 
 pub fn create_request_with_empty_body(url_string: &str) -> Result<Request<Empty<Bytes>>, String> {
     let uri = match http::Uri::try_from(url_string) {

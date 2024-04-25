@@ -2,13 +2,11 @@ use base64::{engine::general_purpose, Engine as _};
 use bytes::Bytes;
 use http::Request;
 use http_body_util::Empty;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::requests;
-use crate::results;
-use crate::type_flyweight::config::Config;
-use crate::type_flyweight::dyndns2::Dyndns2;
-use crate::type_flyweight::results::{DomainResult, UpdateIpResults};
+use requests;
+use results::{DomainResult, UpdateIpResults};
 
 /*
     Implements a subset of the dyndns2 protocol.
@@ -20,20 +18,24 @@ use crate::type_flyweight::results::{DomainResult, UpdateIpResults};
     Only the 911 response body warrants a retry
 */
 
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct Dyndns2 {
+    pub service_uri: String,
+    pub hostname: String,
+    pub username: String,
+    pub password: String,
+}
+
+pub type Dyndns2Domains = Vec<Dyndns2>;
+
 const CLIENT_HEADER_VALUE: &str = "hyper/1.0 rust-client";
 
 // must return results
 pub async fn update_domains(
-    mut domain_results: HashMap<String, DomainResult>,
+    domain_results: &mut HashMap<String, DomainResult>,
     results: &UpdateIpResults,
-    config: &Config,
-) -> HashMap<String, DomainResult> {
-    // don't fetch results if there are no dyndns2 domains
-    let domains = match &config.domain_services.dyndns2 {
-        Some(d) => d,
-        _ => return domain_results,
-    };
-
+    domains: &Dyndns2Domains,
+) {
     for domain in domains {
         // copy previous results initially
         let prev_domain_result = results.domain_service_results.get(&domain.hostname);
@@ -62,8 +64,6 @@ pub async fn update_domains(
         // write over previous entry
         domain_results.insert(domain.hostname.clone(), domain_result);
     }
-
-    domain_results
 }
 
 //	only valid retries are

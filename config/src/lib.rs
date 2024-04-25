@@ -1,9 +1,26 @@
+use serde::{Deserialize, Serialize};
 use serde_json;
 use std::fmt;
 use std::path;
 use tokio::fs;
 
-use crate::type_flyweight::config::Config;
+#[cfg(feature = "cloudflare")]
+use cloudflare::Cloudflare;
+#[cfg(feature = "dyndns2")]
+use dyndns2::Dyndns2;
+use ip_services::IpServices;
+
+// add domain services here
+// beware of hydra
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct Config {
+    pub results_filepath: path::PathBuf,
+    pub ip_services: IpServices,
+    #[cfg(feature = "dyndns2")]
+    pub dyndns2: Vec<Dyndns2>,
+    #[cfg(feature = "cloudflare")]
+    pub cloudflare: Vec<Cloudflare>,
+}
 
 pub enum ConfigError<'a> {
     IoError(std::io::Error),

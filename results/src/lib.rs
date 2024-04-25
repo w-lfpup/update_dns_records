@@ -1,6 +1,7 @@
-use std::collections::HashMap;
-
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::path::PathBuf;
+use tokio::fs;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct ResponseJson {
@@ -61,4 +62,41 @@ impl UpdateIpResults {
             domain_service_results: HashMap::<String, DomainResult>::new(),
         }
     }
+}
+
+pub async fn load_or_create_results(results_filepath: &PathBuf) -> Option<UpdateIpResults> {
+    if let Ok(json_as_str) = fs::read_to_string(&results_filepath).await {
+        if let Ok(r) = serde_json::from_str(&json_as_str) {
+            return Some(r);
+        }
+    };
+
+    Some(UpdateIpResults::new())
+}
+
+pub fn address_has_changed(update_ip_results: &UpdateIpResults) -> bool {
+    match (
+        &update_ip_results.ip_service_result.prev_address,
+        &update_ip_results.ip_service_result.address,
+    ) {
+        (Some(prev_ip), Some(curr_ip)) => prev_ip != curr_ip,
+        (None, Some(_curr_ip)) => true,
+        _ => false,
+    }
+}
+
+pub async fn write_to_file(
+    results: UpdateIpResults,
+    results_filepath: &PathBuf,
+) -> Result<UpdateIpResults, String> {
+    let json_str = match serde_json::to_string_pretty(&results) {
+        Ok(f) => f,
+        Err(e) => return Err(e.to_string()),
+    };
+
+    if let Err(e) = fs::write(&results_filepath, json_str).await {
+        return Err(e.to_string());
+    };
+
+    Ok(results)
 }

@@ -1,13 +1,45 @@
+use serde::{Deserialize, Serialize};
+
 use bytes::Bytes;
 use http::Request;
 use http_body_util::Full;
 use std::collections::HashMap;
 
-use crate::requests;
-use crate::results;
-use crate::type_flyweight::cloudflare::{Cloudflare, CloudflareRequestBody};
-use crate::type_flyweight::config::Config;
-use crate::type_flyweight::results::{DomainResult, UpdateIpResults};
+use requests;
+use results::{DomainResult, UpdateIpResults};
+
+// following types are based on:
+// https://developers.cloudflare.com/api/operations/dns-records-for-a-zone-update-dns-record
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct Cloudflare {
+    pub email: String,
+    pub zone_id: String,
+    pub dns_record_id: String,
+    pub api_token: String,
+    pub name: String,
+    pub proxied: Option<bool>,
+    pub comment: Option<String>,
+    pub tags: Option<Vec<String>>,
+    pub ttl: Option<usize>,
+}
+
+pub type CloudflareDomains = Vec<Cloudflare>;
+
+#[derive(Clone, Serialize, Debug)]
+pub struct CloudflareRequestBody {
+    pub content: String,
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub proxied: Option<bool>,
+    pub r#type: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub comment: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tags: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ttl: Option<usize>,
+}
 
 /*
 https://developers.cloudflare.com/api/operations/dns-records-for-a-zone-patch-dns-record
@@ -17,16 +49,11 @@ Only update changed parameters
 */
 
 pub async fn update_domains(
-    mut domain_results: HashMap<String, DomainResult>,
+    domain_results: &mut HashMap<String, DomainResult>,
     results: &UpdateIpResults,
-    config: &Config,
-) -> HashMap<String, DomainResult> {
-    let domains = match &config.domain_services.cloudflare {
-        Some(d) => d,
-        _ => return domain_results,
-    };
-
-    for domain in domains {
+    cloudflare_domains: &CloudflareDomains,
+) {
+    for domain in cloudflare_domains {
         // copy previous results initially
         let prev_domain_result = results.domain_service_results.get(&domain.name);
         if let Some(prev_result) = prev_domain_result {
@@ -54,8 +81,6 @@ pub async fn update_domains(
         // write over previous entry
         domain_results.insert(domain.name.clone(), domain_result);
     }
-
-    domain_results
 }
 
 // if a response code is 200 no retry, 400 no retry bad info just list it
@@ -83,9 +108,6 @@ async fn build_domain_result(domain: &Cloudflare, address: &str) -> DomainResult
         }
     };
 
-    // update domain service here
-    // create json-able struct from response
-    // add to domain result
     match requests::boxed_request_http1_tls_response(request).await {
         Ok(r) => domain_result.response = Some(r),
         Err(e) => domain_result.errors.push(e),

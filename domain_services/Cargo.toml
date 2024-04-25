@@ -1,0 +1,17 @@
+[package]
+name = "domain_services"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+config = { path = "../config" }
+cloudflare = { path = "../cloudflare" }
+dyndns2 = { path = "../dyndns2" }
+results = { path = "../results" }
+
+[features]
+default = ["dyndns2", "cloudflare"]
+dyndns2 = []
+cloudflare = []

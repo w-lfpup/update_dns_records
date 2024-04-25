@@ -1,7 +1,7 @@
 use std::net;
 
-use crate::requests;
-use crate::type_flyweight::results::IpServiceResult;
+use requests;
+use results::IpServiceResult;
 
 // request with empty body returns response body with IP Address
 pub async fn request_address_as_response_body(
