@@ -32,10 +32,10 @@ const CLIENT_HEADER_VALUE: &str = "hyper/1.0 rust-client";
 
 // must return results
 pub async fn update_domains(
-    mut domain_results: HashMap<String, DomainResult>,
+    domain_results: &mut HashMap<String, DomainResult>,
     results: &UpdateIpResults,
     domains: &Dyndns2Domains,
-) -> HashMap<String, DomainResult> {
+) {
     for domain in domains {
         // copy previous results initially
         let prev_domain_result = results.domain_service_results.get(&domain.hostname);
@@ -64,8 +64,6 @@ pub async fn update_domains(
         // write over previous entry
         domain_results.insert(domain.hostname.clone(), domain_result);
     }
-
-    domain_results
 }
 
 //	only valid retries are

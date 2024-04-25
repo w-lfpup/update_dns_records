@@ -42,10 +42,6 @@ The `ip_services` property defines a list of services with a `url` and its `resp
 
 The `domain_services` property lists domains to update by service or protocol.
 
-Currently `update_ip` supports
-- `dyndns2` protocol
-- `cloudflare` but `update_ip`
-
 However this could potentially support any protocol.
 
 A valid JSON configuration example can be found at
@@ -57,7 +53,17 @@ Execute the following to install `update_ip`.
 
 ```
 git clone https://github.com/herebythere/update_ip
-cargo install --path update_ip/v0.1/update_ip
+cargo install --path update_ip/update_ip
+```
+
+### Install by features
+
+The `update_ip` repo has support for multiple services via rust `features`.
+
+For minimal builds, use the `--features` flag to only include neccessary `services`.
+
+```
+cargo install --path update_ip/update_ip --features dyndns2
 ```
 
 ### Run update_ip
@@ -71,6 +77,13 @@ update_ip <path_to_configuration_file>
 ```
 
 The results of the operation will be written to the location defined by the `results_filepath` property of the config file.
+
+## Available services
+
+The `update_ip` application provides support for the following services:
+
+- `dyndns2` protocol
+- `cloudflare`
 
 ## Licence
 

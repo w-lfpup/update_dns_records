@@ -49,10 +49,10 @@ Only update changed parameters
 */
 
 pub async fn update_domains(
-    mut domain_results: HashMap<String, DomainResult>,
+    domain_results: &mut HashMap<String, DomainResult>,
     results: &UpdateIpResults,
     cloudflare_domains: &CloudflareDomains,
-) -> HashMap<String, DomainResult> {
+) {
     for domain in cloudflare_domains {
         // copy previous results initially
         let prev_domain_result = results.domain_service_results.get(&domain.name);
@@ -81,8 +81,6 @@ pub async fn update_domains(
         // write over previous entry
         domain_results.insert(domain.name.clone(), domain_result);
     }
-
-    domain_results
 }
 
 // if a response code is 200 no retry, 400 no retry bad info just list it
