@@ -10,9 +10,3 @@ config = { path = "../config" }
 cloudflare = { path = "../cloudflare" }
 dyndns2 = { path = "../dyndns2" }
 results = { path = "../results" }
-
-
-[features]
-default = ["dyndns2", "cloudflare"]
-dyndns2 = []
-cloudflare = []

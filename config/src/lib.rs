@@ -4,7 +4,9 @@ use std::fmt;
 use std::path;
 use tokio::fs;
 
+#[cfg(feature = "cloudflare")]
 use cloudflare::Cloudflare;
+#[cfg(feature = "dyndns2")]
 use dyndns2::Dyndns2;
 use ip_services::IpServices;
 
@@ -13,8 +15,10 @@ use ip_services::IpServices;
 // prepare for modules by features
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct DomainServices {
-    pub dyndns2: Option<Vec<Dyndns2>>,
-    pub cloudflare: Option<Vec<Cloudflare>>,
+    #[cfg(feature = "dyndns2")]
+    pub dyndns2: Vec<Dyndns2>,
+    #[cfg(feature = "cloudflare")]
+    pub cloudflare: Vec<Cloudflare>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
