@@ -111,6 +111,7 @@ Use the following schema to add `cloudflare` domains to the `config`.
 		"zone_id": string,
 		"dns_record_id": string,
 		"api_token": string,
+		"type": string, // record type ie: "A"
 		"proxied": bool | none,
 		"comment": string | none,
 		"tags": []string | none,
