@@ -20,14 +20,16 @@ async fn main() {
     };
 
     // "copy" results from disk
-    let mut results = match results::load_or_create_results(&config.results_filepath).await {
+    let prev_results = match results::load_or_create_results(&config.results_filepath).await {
         Some(r) => r,
         None => return println!("results error:\nresults file not found."),
     };
 
     // update results
-    results.ip_service_result = ip_services::request_ip(&config.ip_services, &results).await;
-    results.domain_service_results = domain_services::update_domains(&config, &results).await;
+    let ip_service_result = ip_services::request_ip(&config.ip_services, &prev_results).await;
+    let domain_service_results = domain_services::update_domains(&config, &prev_results).await;
+
+    let results = results::Results::new(ip_service_result, domain_service_results);
 
     // write updated results to disk
     if let Err(e) = results::write_to_file(results, &config.results_filepath).await {
