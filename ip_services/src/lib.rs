@@ -8,36 +8,37 @@ mod address_as_body;
 // beware of hydra
 pub type IpServices = Vec<(String, String)>;
 
-pub async fn request_ip(ip_services: &IpServices, results: &UpdateIpResults) -> IpServiceResult {
-    // preserve the last run's "current" address as this run's previous address
-    let mut ip_service_result = IpServiceResult::new();
-    ip_service_result.prev_address = match &results.ip_service_result.address {
-        Some(address) => Some(address.clone()),
-        _ => results.ip_service_result.prev_address.clone(),
+pub async fn get_ip_service_results(
+    ip_services: &IpServices,
+    prev_results: &Option<UpdateIpResults>,
+) -> Result<IpServiceResult, String> {
+    // get service uri and response type or return previous results
+    let service = match prev_results {
+        Some(results) => &results.ip_service_result.service,
+        None => "previous-results-do-not-exist",
     };
 
-    // get service uri and response type or return previous results
-    let (ip_service, response_type) = match get_random_ip_service(ip_services, results) {
+    let (ip_service, response_type) = match get_random_ip_service(ip_services, service) {
         Some(r) => r,
-        _ => {
-            ip_service_result
-                .errors
-                .push("failed to find ip service".to_string());
-            return ip_service_result;
-        }
+        _ => return Err("failed to find ip service".to_string()),
     };
 
     // preserve service uri and set service results based on response type
-    ip_service_result.service = Some(ip_service);
-    match response_type {
-        _ => address_as_body::request_address_as_response_body(ip_service_result).await,
+    let address = match response_type {
+        _ => address_as_body::request_address_as_response_body(&ip_service).await,
+    };
+
+    match address {
+        Ok(addr) => {
+            let mut ip_struct = IpServiceResult::new(&ip_service);
+            ip_struct.ip_address = Some(addr);
+            Ok(ip_struct)
+        }
+        Err(e) => Err(e),
     }
 }
 
-fn get_random_ip_service(
-    ip_services: &IpServices,
-    results: &UpdateIpResults,
-) -> Option<(String, String)> {
+fn get_random_ip_service(ip_services: &IpServices, prev_service: &str) -> Option<(String, String)> {
     if ip_services.len() == 0 {
         return None;
     }
@@ -48,13 +49,11 @@ fn get_random_ip_service(
 
     // get previous service index
     let mut prev_index = None;
-    if let Some(service) = &results.ip_service_result.service {
-        for (index, (url, _ip_service_type)) in ip_services.iter().enumerate() {
-            if url == service {
-                prev_index = Some(index);
-                break;
-            };
-        }
+    for (index, (url, _ip_service_type)) in ip_services.iter().enumerate() {
+        if url == &prev_service {
+            prev_index = Some(index);
+            break;
+        };
     }
 
     // possibility prev service doesn't exist

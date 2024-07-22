@@ -4,10 +4,10 @@ use std::fmt;
 use std::path;
 use tokio::fs;
 
-#[cfg(feature = "cloudflare")]
-use cloudflare::Cloudflare;
-#[cfg(feature = "dyndns2")]
-use dyndns2::Dyndns2;
+// #[cfg(feature = "cloudflare")]
+// use cloudflare::Cloudflare;
+// #[cfg(feature = "dyndns2")]
+// use dyndns2::Dyndns2;
 use ip_services::IpServices;
 
 // add domain services here
@@ -16,10 +16,10 @@ use ip_services::IpServices;
 pub struct Config {
     pub results_filepath: path::PathBuf,
     pub ip_services: IpServices,
-    #[cfg(feature = "dyndns2")]
-    pub dyndns2: Vec<Dyndns2>,
-    #[cfg(feature = "cloudflare")]
-    pub cloudflare: Vec<Cloudflare>,
+    // #[cfg(feature = "dyndns2")]
+    // pub dyndns2: Vec<Dyndns2>,
+    // #[cfg(feature = "cloudflare")]
+    // pub cloudflare: Vec<Cloudflare>,
 }
 
 pub enum ConfigError<'a> {
@@ -38,9 +38,9 @@ impl fmt::Display for ConfigError<'_> {
     }
 }
 
-pub async fn from_path(path: &path::Path) -> Result<Config, ConfigError> {
+pub async fn from_path(file_path: &path::Path) -> Result<Config, ConfigError> {
     // get position relative to working directory
-    let config_path = match path.canonicalize() {
+    let config_path = match path::absolute(file_path) {
         Ok(pb) => pb,
         Err(e) => return Err(ConfigError::IoError(e)),
     };

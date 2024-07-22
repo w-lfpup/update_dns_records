@@ -1,54 +1,28 @@
 use std::net;
 
 use requests;
-use results::IpServiceResult;
 
 // request with empty body returns response body with IP Address
-pub async fn request_address_as_response_body(
-    mut ip_service_result: IpServiceResult,
-) -> IpServiceResult {
-    let ip_service = match &ip_service_result.service {
-        Some(service) => service,
-        _ => {
-            ip_service_result
-                .errors
-                .push("ip service not found".to_string());
-            return ip_service_result;
-        }
-    };
-
-    let request = match requests::create_request_with_empty_body(&ip_service) {
+pub async fn request_address_as_response_body(service: &str) -> Result<String, String> {
+    let request = match requests::create_request_with_empty_body(service) {
         Ok(req) => req,
-        Err(e) => {
-            ip_service_result.errors.push(e);
-            return ip_service_result;
-        }
+        Err(e) => return Err(e),
     };
 
-    ip_service_result.response = match requests::request_http1_tls_response(request).await {
-        Ok(r) => Some(r),
-        Err(e) => {
-            ip_service_result.errors.push(e);
-            None
-        }
+    let response = match requests::request_http1_tls_response(request).await {
+        Ok(res) => res,
+        Err(e) => return Err(e),
     };
 
-    // set address if request is successful
-    if let Some(response) = &ip_service_result.response {
-        if response.status_code != 200 {
-            ip_service_result
-                .errors
-                .push("response was not okay".to_string());
-            return ip_service_result;
-        }
-
-        match response.body.trim().parse::<net::IpAddr>() {
-            Ok(ip) => ip_service_result.address = Some(ip.to_string()),
-            _ => ip_service_result
-                .errors
-                .push("ip address could not be parsed from response".to_string()),
-        }
+    if response.status_code != 200 {
+        return Err("response was not okay".to_string());
     }
 
-    ip_service_result
+    // set address if request is successful
+    let ip_address = match response.body.trim().parse::<net::IpAddr>() {
+        Ok(ip) => ip.to_string(),
+        _ => return Err("ip address could not be parsed from response".to_string()),
+    };
+
+    Ok(ip_address)
 }

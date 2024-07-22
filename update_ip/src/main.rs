@@ -2,8 +2,8 @@ use std::env;
 use std::path;
 
 use config;
-use domain_services;
-use ip_services;
+// use domain_services;
+// use ip_services;
 use results;
 
 #[tokio::main]
@@ -20,19 +20,17 @@ async fn main() {
     };
 
     // "copy" results from disk
-    let prev_results = match results::load_or_create_results(&config.results_filepath).await {
-        Some(r) => r,
-        None => return println!("results error:\nresults file not found."),
-    };
+    let prev_results = results::load_results_from_disk(&config.results_filepath).await;
 
-    // update results
-    let ip_service_result = ip_services::request_ip(&config.ip_services, &prev_results).await;
-    let domain_service_results = domain_services::update_domains(&config, &prev_results).await;
+    // // // update results
+    let ip_service_result =
+        ip_services::get_ip_service_results(&config.ip_services, &prev_results).await;
+    // let domain_service_results = domain_services::update_domains(&config, &prev_results).await;
 
-    let results = results::Results::new(ip_service_result, domain_service_results);
+    // let results = results::Results::new(ip_service_result, domain_service_results);
 
-    // write updated results to disk
-    if let Err(e) = results::write_to_file(results, &config.results_filepath).await {
-        return println!("file error:\n{}", e);
-    };
+    // // write updated results to disk
+    // if let Err(e) = results::write_to_file(results, &config.results_filepath).await {
+    //     return println!("file error:\n{}", e);
+    // };
 }

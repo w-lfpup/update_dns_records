@@ -14,15 +14,12 @@ pub struct ResponseJson {
 pub struct IpServiceResult {
     pub service: String,
     pub ip_address: Option<String>,
-    pub response: Option<ResponseJson>,
-    pub errors: Vec<String>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct DomainResult {
     pub hostname: String,
     pub ip_address: Option<String>,
-    pub response: Option<ResponseJson>,
     pub errors: Vec<String>,
 }
 
@@ -33,23 +30,20 @@ pub struct UpdateIpResults {
 }
 
 impl IpServiceResult {
-    pub fn new(service: &String) -> IpServiceResult {
+    pub fn new(service: &str) -> IpServiceResult {
         IpServiceResult {
-            service: service.clone(),
+            service: service.to_string(),
             ip_address: None,
-            errors: Vec::new(),
-            response: None,
         }
     }
 }
 
 impl DomainResult {
-    pub fn new(hostname: &String) -> DomainResult {
+    pub fn new(hostname: &str) -> DomainResult {
         DomainResult {
-            hostname: hostname.clone(),
+            hostname: hostname.to_string(),
             ip_address: None,
             errors: Vec::<String>::new(),
-            response: None,
         }
     }
 }
