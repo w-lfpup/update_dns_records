@@ -5,14 +5,13 @@ use results::{IpServiceResult, UpdateIpResults};
 mod address_as_body;
 
 // ip services are accounted for by response type
-// beware of hydra
+// beware of potential hydra
 pub type IpServices = Vec<(String, String)>;
 
 pub async fn get_ip_service_results(
     ip_services: &IpServices,
     prev_results: &Option<UpdateIpResults>,
 ) -> Result<IpServiceResult, String> {
-    // get service uri and response type or return previous results
     let service = match prev_results {
         Some(results) => &results.ip_service_result.service,
         None => "previous-results-do-not-exist",
@@ -23,7 +22,6 @@ pub async fn get_ip_service_results(
         _ => return Err("failed to find ip service".to_string()),
     };
 
-    // preserve service uri and set service results based on response type
     let address = match response_type {
         _ => address_as_body::request_address_as_response_body(&ip_service).await,
     };
@@ -56,7 +54,7 @@ fn get_random_ip_service(ip_services: &IpServices, prev_service: &str) -> Option
         };
     }
 
-    // possibility prev service doesn't exist
+    // prev service might not exist
     let length = match prev_index {
         Some(_index) => ip_services.len() - 1,
         _ => ip_services.len(),

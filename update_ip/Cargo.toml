@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 config = { path = "../config" }
-# domain_services = { path = "../domain_services" }
+domain_services = { path = "../domain_services" }
 ip_services = { path = "../ip_services" }
 results = { path = "../results" }
 tokio = { workspace = true }

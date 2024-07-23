@@ -2,7 +2,7 @@ use std::env;
 use std::path;
 
 use config;
-// use domain_services;
+use domain_services;
 // use ip_services;
 use results;
 
@@ -20,15 +20,21 @@ async fn main() {
     };
 
     // "copy" results from disk
-    let prev_results = results::load_results_from_disk(&config.results_filepath).await;
-
-    // // // update results
+    let prev_results = match results::load_results_from_disk(&config.results_filepath).await {
+        Ok(results) => Some(results),
+        _ => None,
+    };
+    // update results
     let ip_service_result =
-        ip_services::get_ip_service_results(&config.ip_services, &prev_results).await;
-    // let domain_service_results = domain_services::update_domains(&config, &prev_results).await;
+        match ip_services::get_ip_service_results(&config.ip_services, &prev_results).await {
+            Ok(results) => Some(results),
+            _ => None,
+        };
+
+    let domain_service_results =
+        domain_services::update_domains(&config, &prev_results, &ip_service_result).await;
 
     // let results = results::Results::new(ip_service_result, domain_service_results);
-
     // // write updated results to disk
     // if let Err(e) = results::write_to_file(results, &config.results_filepath).await {
     //     return println!("file error:\n{}", e);

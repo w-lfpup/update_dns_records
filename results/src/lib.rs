@@ -60,15 +60,15 @@ impl UpdateIpResults {
     }
 }
 
-pub async fn load_results_from_disk(results_filepath: &PathBuf) -> Option<UpdateIpResults> {
+pub async fn load_results_from_disk(results_filepath: &PathBuf) -> Result<UpdateIpResults, String> {
     let json_as_str = match fs::read_to_string(&results_filepath).await {
         Ok(json_str) => json_str,
-        Err(_) => return None,
+        Err(e) => return Err(e.to_string()),
     };
 
     match serde_json::from_str(&json_as_str) {
         Ok(results) => results,
-        _ => None,
+        Err(e) => Err(e.to_string()),
     }
 }
 
