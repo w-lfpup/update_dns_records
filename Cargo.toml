@@ -1,5 +1,6 @@
 [workspace]
-members = [ "cloudflare", "config", "domain_services", "dyndns2", "ip_services", "requests","results", "update_ip"]
+# members = [ "cloudflare", "config", "domain_services", "dyndns2", "ip_services", "requests","results", "update_ip"]
+members = [ "config", "domain_services", "dyndns2", "ip_services", "requests","results", "update_ip"]
 resolver = "2"
 
 [workspace.dependencies]

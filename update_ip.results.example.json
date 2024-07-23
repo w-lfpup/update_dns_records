@@ -1,26 +1,13 @@
 {
   "ip_service_result": {
-    "prev_address": "192.168.0.1",
-    "address": "192.168.0.1",
-    "service": "https://checkip.amazonaws.com/",
-    "errors": [],
-    "response": {
-      "status_code": 200,
-      "body": "192.168.0.1\n",
-      "headers": {
-        "content-length": "13",
-        "connection": "keep-alive",
-        "server": "Not Available",
-        "date": "Thu, 25 Jan 2024 08:37:13 GMT"
-      },
-      "timestamp": 1706171833699
-    }
+    "ip_address": "192.168.0.1",
+    "service": "https://checkip.amazonaws.com/"
   },
   "domain_service_results": {
     "something.com": {
       "hostname": "something.com",
-      "errors": [],
-      "response": null
+      "ip_address": "192.168.0.1",
+      "errors": []
     }
   }
 }

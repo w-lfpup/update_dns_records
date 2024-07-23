@@ -7,7 +7,6 @@ use hyper::body::Incoming;
 use hyper::client::conn::http1;
 use hyper_util::rt::TokioIo;
 use native_tls::TlsConnector;
-use std::collections::HashMap;
 use std::io;
 use std::time::SystemTime;
 use tokio::net::TcpStream;
@@ -151,7 +150,6 @@ async fn convert_response_to_json_struct(res: Response<Incoming>) -> Result<Resp
         Err(e) => return Err(e),
     };
 
-    let headers = get_headers(&res);
     let status = res.status().as_u16();
 
     let body_str = match response_body_to_string(res).await {
@@ -162,7 +160,6 @@ async fn convert_response_to_json_struct(res: Response<Incoming>) -> Result<Resp
     Ok(ResponseJson {
         status_code: status,
         body: body_str,
-        headers: headers,
         timestamp: timestamp,
     })
 }
@@ -180,22 +177,6 @@ async fn response_body_to_string(response: Response<Incoming>) -> Result<String,
     };
 
     Ok(ip_str.to_string())
-}
-
-/*
-    only adds ascii safe headers and header values.
-    w3c spec accepts opaque values.
-*/
-fn get_headers(res: &Response<Incoming>) -> HashMap<String, String> {
-    let mut headers = HashMap::<String, String>::new();
-    for (key, value) in res.headers() {
-        let value_str = match value.to_str() {
-            Ok(v) => v,
-            _ => continue,
-        };
-        headers.insert(key.to_string(), value_str.to_string());
-    }
-    headers
 }
 
 fn get_timestamp() -> Result<u128, String> {

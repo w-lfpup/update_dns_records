@@ -7,24 +7,20 @@ use tokio::fs;
 pub struct ResponseJson {
     pub status_code: u16,
     pub body: String,
-    pub headers: HashMap<String, String>,
     pub timestamp: u128,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct IpServiceResult {
-    pub prev_address: Option<String>,
-    pub address: Option<String>,
-    pub service: Option<String>,
-    pub errors: Vec<String>,
-    pub response: Option<ResponseJson>,
+    pub service: String,
+    pub ip_address: Option<String>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct DomainResult {
     pub hostname: String,
+    pub ip_address: Option<String>,
     pub errors: Vec<String>,
-    pub response: Option<ResponseJson>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -34,58 +30,55 @@ pub struct UpdateIpResults {
 }
 
 impl IpServiceResult {
-    pub fn new() -> IpServiceResult {
+    pub fn new(service: &str) -> IpServiceResult {
         IpServiceResult {
-            prev_address: None,
-            address: None,
-            service: None,
-            errors: Vec::new(),
-            response: None,
+            service: service.to_string(),
+            ip_address: None,
         }
     }
 }
 
 impl DomainResult {
-    pub fn new(hostname: &String) -> DomainResult {
+    pub fn new(hostname: &str) -> DomainResult {
         DomainResult {
-            hostname: hostname.clone(),
+            hostname: hostname.to_string(),
+            ip_address: None,
             errors: Vec::<String>::new(),
-            response: None,
         }
     }
 }
 
 impl UpdateIpResults {
-    pub fn new() -> UpdateIpResults {
-        UpdateIpResults {
-            ip_service_result: IpServiceResult::new(),
-            domain_service_results: HashMap::<String, DomainResult>::new(),
+    pub fn try_from_results(
+        prev_results: Option<UpdateIpResults>,
+        ip_service_result: Option<IpServiceResult>,
+        domain_service_results: Option<HashMap<String, DomainResult>>,
+    ) -> Result<UpdateIpResults, String> {
+        if let (Some(ip_result), Some(domain_results)) = (ip_service_result, domain_service_results)
+        {
+            return Ok(UpdateIpResults {
+                ip_service_result: ip_result,
+                domain_service_results: domain_results,
+            });
         }
+
+        Err("couldn't get resutls".to_string())
     }
 }
 
-pub async fn load_or_create_results(results_filepath: &PathBuf) -> Option<UpdateIpResults> {
-    if let Ok(json_as_str) = fs::read_to_string(&results_filepath).await {
-        if let Ok(r) = serde_json::from_str(&json_as_str) {
-            return Some(r);
-        }
+pub async fn load_results_from_disk(results_filepath: &PathBuf) -> Result<UpdateIpResults, String> {
+    let json_as_str = match fs::read_to_string(&results_filepath).await {
+        Ok(json_str) => json_str,
+        Err(e) => return Err(e.to_string()),
     };
 
-    Some(UpdateIpResults::new())
-}
-
-pub fn address_has_changed(update_ip_results: &UpdateIpResults) -> bool {
-    match (
-        &update_ip_results.ip_service_result.prev_address,
-        &update_ip_results.ip_service_result.address,
-    ) {
-        (Some(prev_ip), Some(curr_ip)) => prev_ip != curr_ip,
-        (None, Some(_curr_ip)) => true,
-        _ => false,
+    match serde_json::from_str(&json_as_str) {
+        Ok(results) => results,
+        Err(e) => Err(e.to_string()),
     }
 }
 
-pub async fn write_to_file(
+pub async fn write_results_to_disk(
     results: UpdateIpResults,
     results_filepath: &PathBuf,
 ) -> Result<UpdateIpResults, String> {
