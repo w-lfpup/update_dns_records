@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 config = { path = "../config" }
-# cloudflare = { path = "../cloudflare" }
+cloudflare = { path = "../cloudflare" }
 dyndns2 = { path = "../dyndns2" }
 results = { path = "../results" }
 

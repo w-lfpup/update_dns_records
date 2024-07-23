@@ -56,7 +56,7 @@ pub async fn update_domains(
         let domain_result = build_domain_result(&domain, ip_address).await;
 
         // // write over previous entry
-        // domain_results.insert(domain.hostname.clone(), domain_result);
+        domain_results.insert(domain.hostname.clone(), domain_result);
     }
 }
 
@@ -78,7 +78,6 @@ async fn build_domain_result(domain: &Dyndns2, ip_address: &str) -> DomainResult
         Ok(r) => {
             if verify_resposne(&r) {
                 domain_result.ip_address = Some(ip_address.to_string());
-                domain_result.response = Some(r);
             }
         }
         Err(e) => domain_result.errors.push(e),

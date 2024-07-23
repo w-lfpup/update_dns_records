@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use config::Config;
 use results::{DomainResult, IpServiceResult, UpdateIpResults};
 
-// #[cfg(feature = "cloudflare")]
-// use cloudflare;
+#[cfg(feature = "cloudflare")]
+use cloudflare;
 #[cfg(feature = "dyndns2")]
 use dyndns2;
 
@@ -30,8 +30,14 @@ pub async fn update_domains(
     )
     .await;
 
-    // #[cfg(feature = "dyndns2")]
-    // cloudflare::update_domains(&mut domain_results, results, &config.cloudflare).await;
+    #[cfg(feature = "dyndns2")]
+    cloudflare::update_domains(
+        &mut domain_results,
+        prev_results,
+        &ip_address,
+        &config.cloudflare,
+    )
+    .await;
 
     Ok(domain_results)
 }

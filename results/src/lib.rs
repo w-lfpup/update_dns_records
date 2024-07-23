@@ -20,7 +20,6 @@ pub struct IpServiceResult {
 pub struct DomainResult {
     pub hostname: String,
     pub ip_address: Option<String>,
-    pub response: Option<ResponseJson>,
     pub errors: Vec<String>,
 }
 
@@ -44,7 +43,6 @@ impl DomainResult {
         DomainResult {
             hostname: hostname.to_string(),
             ip_address: None,
-            response: None,
             errors: Vec::<String>::new(),
         }
     }

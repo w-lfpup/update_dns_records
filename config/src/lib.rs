@@ -4,11 +4,13 @@ use std::fmt;
 use std::path;
 use tokio::fs;
 
-// #[cfg(feature = "cloudflare")]
-// use cloudflare::Cloudflare;
+use ip_services::IpServices;
+
+// ddns services
+#[cfg(feature = "cloudflare")]
+use cloudflare::Cloudflare;
 #[cfg(feature = "dyndns2")]
 use dyndns2::Dyndns2;
-use ip_services::IpServices;
 
 // add domain services here
 // beware of hydra
@@ -18,8 +20,8 @@ pub struct Config {
     pub ip_services: IpServices,
     #[cfg(feature = "dyndns2")]
     pub dyndns2: Vec<Dyndns2>,
-    // #[cfg(feature = "cloudflare")]
-    // pub cloudflare: Vec<Cloudflare>,
+    #[cfg(feature = "cloudflare")]
+    pub cloudflare: Vec<Cloudflare>,
 }
 
 pub enum ConfigError<'a> {

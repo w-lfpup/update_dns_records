@@ -11,7 +11,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 ip_services = { path = "../ip_services" }
-# cloudflare = { path = "../cloudflare" }
+cloudflare = { path = "../cloudflare" }
 dyndns2 = { path = "../dyndns2" }
 
 [features]
