@@ -12,7 +12,7 @@ serde_json = { workspace = true }
 
 ip_services = { path = "../ip_services" }
 # cloudflare = { path = "../cloudflare" }
-# dyndns2 = { path = "../dyndns2" }
+dyndns2 = { path = "../dyndns2" }
 
 [features]
 default = []

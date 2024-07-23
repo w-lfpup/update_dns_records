@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use requests;
-use results::{DomainResult, UpdateIpResults};
+use results::{DomainResult, IpServiceResult, ResponseJson, UpdateIpResults};
 
 /*
     Implements a subset of the dyndns2 protocol.
@@ -33,56 +33,37 @@ const CLIENT_HEADER_VALUE: &str = "hyper/1.0 rust-client";
 // must return results
 pub async fn update_domains(
     domain_results: &mut HashMap<String, DomainResult>,
-    results: &UpdateIpResults,
+    prev_results: &Option<UpdateIpResults>,
+    ip_address: &str,
     domains: &Dyndns2Domains,
 ) {
     for domain in domains {
-        // copy previous results initially
-        let prev_domain_result = results.domain_service_results.get(&domain.hostname);
-        if let Some(prev_result) = prev_domain_result {
-            domain_results.insert(domain.hostname.clone(), prev_result.clone());
-        }
-
-        // continue if address did not change and there's no retry
-        if !results::address_has_changed(results) && !should_retry(prev_domain_result) {
-            continue;
-        }
-
-        //  get address or continue
-        let address = match (
-            &results.ip_service_result.prev_address,
-            &results.ip_service_result.address,
-        ) {
-            (Some(prev_addr), None) => prev_addr,
-            (_, Some(addr)) => addr,
-            _ => continue,
+        let domain_result = match prev_results {
+            Some(results) => match results.domain_service_results.get(&domain.hostname) {
+                Some(domain) => domain,
+                _ => &DomainResult::new(&domain.hostname),
+            },
+            _ => &DomainResult::new(&domain.hostname),
         };
 
-        // build domain result
-        let domain_result = build_domain_result(&domain, &address).await;
-
-        // write over previous entry
-        domain_results.insert(domain.hostname.clone(), domain_result);
-    }
-}
-
-//	only valid retries are
-//		- server failed
-//		- service returns "911"
-fn should_retry(domain_result: Option<&DomainResult>) -> bool {
-    if let Some(prev_result) = domain_result {
-        if let Some(response) = &prev_result.response {
-            return response.body.starts_with("911");
+        if let Some(domain_ip) = &domain_result.ip_address {
+            if domain_ip == ip_address {
+                continue;
+            }
         }
-    }
 
-    false
+        // build domain result
+        let domain_result = build_domain_result(&domain, ip_address).await;
+
+        // // write over previous entry
+        // domain_results.insert(domain.hostname.clone(), domain_result);
+    }
 }
 
-async fn build_domain_result(domain: &Dyndns2, address: &str) -> DomainResult {
+async fn build_domain_result(domain: &Dyndns2, ip_address: &str) -> DomainResult {
     let mut domain_result = DomainResult::new(&domain.hostname);
 
-    let request = match get_https_dyndns2_req(&domain, &address) {
+    let request = match get_https_dyndns2_req(&domain, &ip_address) {
         Ok(s) => s,
         Err(e) => {
             domain_result.errors.push(e);
@@ -94,7 +75,12 @@ async fn build_domain_result(domain: &Dyndns2, address: &str) -> DomainResult {
     // create json-able struct from response
     // add to domain result
     match requests::request_http1_tls_response(request).await {
-        Ok(r) => domain_result.response = Some(r),
+        Ok(r) => {
+            if verify_resposne(&r) {
+                domain_result.ip_address = Some(ip_address.to_string());
+                domain_result.response = Some(r);
+            }
+        }
         Err(e) => domain_result.errors.push(e),
     }
 
@@ -126,4 +112,8 @@ fn get_https_dyndns2_req(domain: &Dyndns2, ip_addr: &str) -> Result<Request<Empt
         Ok(req) => Ok(req),
         Err(e) => Err(e.to_string()),
     }
+}
+
+fn verify_resposne(res: &ResponseJson) -> bool {
+    res.status_code != 200
 }

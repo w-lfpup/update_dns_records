@@ -6,8 +6,8 @@ use tokio::fs;
 
 // #[cfg(feature = "cloudflare")]
 // use cloudflare::Cloudflare;
-// #[cfg(feature = "dyndns2")]
-// use dyndns2::Dyndns2;
+#[cfg(feature = "dyndns2")]
+use dyndns2::Dyndns2;
 use ip_services::IpServices;
 
 // add domain services here
@@ -16,8 +16,8 @@ use ip_services::IpServices;
 pub struct Config {
     pub results_filepath: path::PathBuf,
     pub ip_services: IpServices,
-    // #[cfg(feature = "dyndns2")]
-    // pub dyndns2: Vec<Dyndns2>,
+    #[cfg(feature = "dyndns2")]
+    pub dyndns2: Vec<Dyndns2>,
     // #[cfg(feature = "cloudflare")]
     // pub cloudflare: Vec<Cloudflare>,
 }
