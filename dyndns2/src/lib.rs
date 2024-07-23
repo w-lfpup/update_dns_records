@@ -86,6 +86,10 @@ async fn build_domain_result(domain: &Dyndns2, ip_address: &str) -> DomainResult
     domain_result
 }
 
+fn verify_resposne(res: &ResponseJson) -> bool {
+    res.status_code == 200
+}
+
 fn get_https_dyndns2_req(domain: &Dyndns2, ip_addr: &str) -> Result<Request<Empty<Bytes>>, String> {
     let uri_str = domain.service_uri.clone() + "?hostname=" + &domain.hostname + "&myip=" + ip_addr;
     let uri = match uri_str.parse::<http::Uri>() {
@@ -111,8 +115,4 @@ fn get_https_dyndns2_req(domain: &Dyndns2, ip_addr: &str) -> Result<Request<Empt
         Ok(req) => Ok(req),
         Err(e) => Err(e.to_string()),
     }
-}
-
-fn verify_resposne(res: &ResponseJson) -> bool {
-    res.status_code != 200
 }

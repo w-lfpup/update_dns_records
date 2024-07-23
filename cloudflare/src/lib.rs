@@ -6,7 +6,7 @@ use http_body_util::Full;
 use std::collections::HashMap;
 
 use requests;
-use results::{DomainResult, UpdateIpResults};
+use results::{DomainResult, ResponseJson, UpdateIpResults};
 
 // following types are based on:
 // https://developers.cloudflare.com/api/operations/dns-records-for-a-zone-update-dns-record
@@ -56,101 +56,91 @@ pub async fn update_domains(
     cloudflare_domains: &CloudflareDomains,
 ) {
     for domain in cloudflare_domains {
-        // copy previous results initially
-        // let prev_domain_result = results.domain_service_results.get(&domain.name);
-        // if let Some(prev_result) = prev_domain_result {
-        //     domain_results.insert(domain.name.clone(), prev_result.clone());
-        // }
+        let domain_result = match prev_results {
+            Some(results) => match results.domain_service_results.get(&domain.name) {
+                Some(domain) => domain,
+                _ => &DomainResult::new(&domain.name),
+            },
+            _ => &DomainResult::new(&domain.name),
+        };
 
-        // // continue if address did not change and there's no retry
-        // if !results::address_has_changed(results) && !should_retry(prev_domain_result) {
-        //     continue;
-        // }
+        if let Some(domain_ip) = &domain_result.ip_address {
+            if domain_ip == ip_address {
+                continue;
+            }
+        }
 
-        // //  get address or continue
-        // let address = match (
-        //     &results.ip_service_result.prev_address,
-        //     &results.ip_service_result.address,
-        // ) {
-        //     (Some(prev_addr), None) => prev_addr,
-        //     (_, Some(addr)) => addr,
-        //     _ => continue,
-        // };
+        // build domain result
+        let domain_result = build_domain_result(&domain, ip_address).await;
 
-        // // build domain result
-        // let domain_result = build_domain_result(&domain, &address).await;
-
-        // // write over previous entry
-        // domain_results.insert(domain.name.clone(), domain_result);
+        // write over previous entry
+        domain_results.insert(domain.name.clone(), domain_result);
     }
 }
 
-// if a response code is 200 no retry, 400 no retry bad info just list it
-// if there is no entry, it is an added entry and should be retried
-// fn should_retry(domain_result: Option<&DomainResult>) -> bool {
-//     if let Some(prev_result) = domain_result {
-//         if let Some(response) = &prev_result.response {
-//             if 500 <= response.status_code && response.status_code < 600 {
-//                 return true;
-//             }
-//         }
-//     }
+async fn build_domain_result(domain: &Cloudflare, ip_address: &str) -> DomainResult {
+    let mut domain_result = DomainResult::new(&domain.name);
 
-//     false
-// }
+    let request = match get_cloudflare_req(&domain, &ip_address) {
+        Ok(s) => s,
+        Err(e) => {
+            domain_result.errors.push(e);
+            return domain_result;
+        }
+    };
 
-// async fn build_domain_result(domain: &Cloudflare, address: &str) -> DomainResult {
-//     let mut domain_result = DomainResult::new(&domain.name);
+    // update domain service
+    // create json-able struct from response
+    // add to domain result
+    match requests::boxed_request_http1_tls_response(request).await {
+        Ok(r) => {
+            if verify_resposne(&r) {
+                domain_result.ip_address = Some(ip_address.to_string());
+            }
+        }
+        Err(e) => domain_result.errors.push(e),
+    }
 
-//     let request = match get_cloudflare_req(&domain, &address) {
-//         Ok(s) => s,
-//         Err(e) => {
-//             domain_result.errors.push(e);
-//             return domain_result;
-//         }
-//     };
+    domain_result
+}
 
-//     match requests::boxed_request_http1_tls_response(request).await {
-//         Ok(r) => domain_result.response = Some(r),
-//         Err(e) => domain_result.errors.push(e),
-//     }
+fn verify_resposne(res: &ResponseJson) -> bool {
+    res.status_code == 200
+}
 
-//     domain_result
-// }
+fn get_cloudflare_req(domain: &Cloudflare, ip_addr: &str) -> Result<Request<Full<Bytes>>, String> {
+    let uri_str = "https://api.cloudflare.com/client/v4/zones/".to_string()
+        + &domain.zone_id
+        + "/dns_records/"
+        + &domain.dns_record_id;
 
-// fn get_cloudflare_req(domain: &Cloudflare, ip_addr: &str) -> Result<Request<Full<Bytes>>, String> {
-//     let uri_str = "https://api.cloudflare.com/client/v4/zones/".to_string()
-//         + &domain.zone_id
-//         + "/dns_records/"
-//         + &domain.dns_record_id;
+    let auth_value = "Bearer ".to_string() + &domain.api_token;
 
-//     let auth_value = "Bearer ".to_string() + &domain.api_token;
+    let body = CloudflareRequestBody {
+        content: ip_addr.to_string(),
+        name: domain.name.clone(),
+        proxied: domain.proxied.clone(),
+        r#type: domain.r#type.clone(),
+        comment: domain.comment.clone(),
+        tags: domain.tags.clone(),
+        ttl: domain.ttl.clone(),
+    };
 
-//     let body = CloudflareRequestBody {
-//         content: ip_addr.to_string(),
-//         name: domain.name.clone(),
-//         proxied: domain.proxied.clone(),
-//         r#type: domain.r#type.clone(),
-//         comment: domain.comment.clone(),
-//         tags: domain.tags.clone(),
-//         ttl: domain.ttl.clone(),
-//     };
+    let body_str = match serde_json::to_string(&body) {
+        Ok(json_str) => json_str,
+        Err(e) => return Err(e.to_string()),
+    };
 
-//     let body_str = match serde_json::to_string(&body) {
-//         Ok(json_str) => json_str,
-//         Err(e) => return Err(e.to_string()),
-//     };
-
-//     match Request::builder()
-//         .method("PATCH")
-//         .uri(uri_str)
-//         .header(hyper::header::HOST, "api.cloudflare.com")
-//         .header(hyper::header::CONTENT_TYPE, "application/json")
-//         .header("X-Auth-Email", &domain.email)
-//         .header(hyper::header::AUTHORIZATION, auth_value)
-//         .body(Full::new(Bytes::from(body_str)))
-//     {
-//         Ok(req) => Ok(req),
-//         Err(e) => Err(e.to_string()),
-//     }
-// }
+    match Request::builder()
+        .method("PATCH")
+        .uri(uri_str)
+        .header(hyper::header::HOST, "api.cloudflare.com")
+        .header(hyper::header::CONTENT_TYPE, "application/json")
+        .header("X-Auth-Email", &domain.email)
+        .header(hyper::header::AUTHORIZATION, auth_value)
+        .body(Full::new(Bytes::from(body_str)))
+    {
+        Ok(req) => Ok(req),
+        Err(e) => Err(e.to_string()),
+    }
+}
