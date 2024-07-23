@@ -49,14 +49,20 @@ impl DomainResult {
 }
 
 impl UpdateIpResults {
-    pub fn new(
-        ip_service_result: IpServiceResult,
-        domain_service_results: HashMap<String, DomainResult>,
-    ) -> UpdateIpResults {
-        UpdateIpResults {
-            ip_service_result: ip_service_result,
-            domain_service_results: domain_service_results,
+    pub fn try_from_results(
+        prev_results: Option<UpdateIpResults>,
+        ip_service_result: Option<IpServiceResult>,
+        domain_service_results: Option<HashMap<String, DomainResult>>,
+    ) -> Result<UpdateIpResults, String> {
+        if let (Some(ip_result), Some(domain_results)) = (ip_service_result, domain_service_results)
+        {
+            return Ok(UpdateIpResults {
+                ip_service_result: ip_result,
+                domain_service_results: domain_results,
+            });
         }
+
+        Err("couldn't get resutls".to_string())
     }
 }
 

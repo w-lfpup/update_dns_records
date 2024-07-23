@@ -12,7 +12,7 @@ pub async fn update_domains(
     config: &Config,
     prev_results: &Option<UpdateIpResults>,
     ip_service_result: &Option<IpServiceResult>,
-) -> HashMap<String, DomainResult> {
+) -> Result<HashMap<String, DomainResult>, String> {
     // get ip address
 
     let mut domain_results = HashMap::<String, DomainResult>::new();
@@ -24,5 +24,5 @@ pub async fn update_domains(
     // #[cfg(feature = "dyndns2")]
     // cloudflare::update_domains(&mut domain_results, results, &config.cloudflare).await;
 
-    domain_results
+    Ok(domain_results)
 }
