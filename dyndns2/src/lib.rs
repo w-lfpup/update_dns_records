@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use requests;
-use results::{DomainResult, IpServiceResult, ResponseJson, UpdateIpResults};
+use results::{DomainResult, ResponseJson, UpdateIpResults};
 
 /*
     Implements a subset of the dyndns2 protocol.
