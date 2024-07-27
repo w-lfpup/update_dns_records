@@ -50,7 +50,6 @@ impl DomainResult {
 
 impl UpdateIpResults {
     pub fn try_from_results(
-        prev_results: Option<UpdateIpResults>,
         ip_service_result: Option<IpServiceResult>,
         domain_service_results: Option<HashMap<String, DomainResult>>,
     ) -> Result<UpdateIpResults, String> {
