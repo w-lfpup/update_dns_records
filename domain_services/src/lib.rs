@@ -13,12 +13,19 @@ pub async fn update_domains(
     prev_results: &Option<UpdateIpResults>,
     ip_service_result: &Option<IpServiceResult>,
 ) -> Result<HashMap<String, DomainResult>, String> {
+    println!("attempting to update domains");
     let ip_address = match get_ip_address(prev_results, ip_service_result) {
         Ok(ip) => ip,
         Err(e) => return Err(e),
     };
+    println!("with ipaddr: {:?}", ip_address);
 
     let mut domain_results = HashMap::<String, DomainResult>::new();
+
+    #[cfg(feature = "cloudflare")]
+    println!("attempted to updated cloudflare");
+    #[cfg(feature = "dyndns2")]
+    println!("attempted to updated dyndns2");
 
     // add more services here
     #[cfg(feature = "dyndns2")]
@@ -27,8 +34,7 @@ pub async fn update_domains(
         prev_results,
         &ip_address,
         &config.dyndns2,
-    )
-    .await;
+    ).await;
 
     #[cfg(feature = "cloudflare")]
     cloudflare::update_domains(
@@ -36,8 +42,7 @@ pub async fn update_domains(
         prev_results,
         &ip_address,
         &config.cloudflare,
-    )
-    .await;
+    ).await;
 
     Ok(domain_results)
 }

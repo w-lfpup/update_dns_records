@@ -35,23 +35,23 @@ async fn main() {
         };
     println!("ip_service_result: {:?}", ip_service_result);
 
-    // let domain_service_results =
-    //     match domain_services::update_domains(&config, &prev_results, &ip_service_result).await {
-    //         Ok(results) => Some(results),
-    //         _ => None,
-    //     };
-    // println!("domain_service_results: {:?}", domain_service_results);
+    let domain_service_results =
+        match domain_services::update_domains(&config, &prev_results, &ip_service_result).await {
+            Ok(results) => Some(results),
+            _ => None,
+        };
+    println!("domain_service_results: {:?}", domain_service_results);
 
-    // let results =
-    //     match results::UpdateIpResults::try_from_results(ip_service_result, domain_service_results)
-    //     {
-    //         Ok(c) => c,
-    //         Err(e) => return println!("{}", e),
-    //     };
-    // println!("results: {:?}", results);
+    let results =
+        match results::UpdateIpResults::try_from_results(ip_service_result, domain_service_results)
+        {
+            Ok(c) => c,
+            Err(e) => return println!("{}", e),
+        };
+    println!("results: {:?}", results);
 
-    // // write updated results to disk
-    // if let Err(e) = results::write_results_to_disk(results, &config.results_filepath).await {
-    //     return println!("file error:\n{}", e);
-    // };
+    // write updated results to disk
+    if let Err(e) = results::write_results_to_disk(results, &config.results_filepath).await {
+        return println!("file error:\n{}", e);
+    };
 }
