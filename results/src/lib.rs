@@ -72,7 +72,7 @@ pub async fn load_results_from_disk(results_filepath: &PathBuf) -> Result<Update
     };
 
     match serde_json::from_str(&json_as_str) {
-        Ok(results) => results,
+        Ok(results) => Ok(results),
         Err(e) => Err(e.to_string()),
     }
 }

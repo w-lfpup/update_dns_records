@@ -25,22 +25,18 @@ async fn main() {
         _ => None,
     };
 
-    println!("prev_results: {:?}", prev_results);
-
     // update results
     let ip_service_result =
         match ip_services::get_ip_service_results(&config.ip_services, &prev_results).await {
             Ok(results) => Some(results),
             _ => None,
         };
-    println!("ip_service_result: {:?}", ip_service_result);
 
     let domain_service_results =
         match domain_services::update_domains(&config, &prev_results, &ip_service_result).await {
             Ok(results) => Some(results),
             _ => None,
         };
-    println!("domain_service_results: {:?}", domain_service_results);
 
     let results =
         match results::UpdateIpResults::try_from_results(ip_service_result, domain_service_results)
@@ -48,7 +44,6 @@ async fn main() {
             Ok(c) => c,
             Err(e) => return println!("{}", e),
         };
-    println!("results: {:?}", results);
 
     // write updated results to disk
     if let Err(e) = results::write_results_to_disk(results, &config.results_filepath).await {

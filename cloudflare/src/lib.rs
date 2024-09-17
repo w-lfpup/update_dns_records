@@ -55,7 +55,6 @@ pub async fn update_domains(
     ip_address: &str,
     cloudflare_domains: &CloudflareDomains,
 ) {
-    println!("update_domains cloudflare func");
     for domain in cloudflare_domains {
         let domain_result = match prev_results {
             Some(results) => match results.domain_service_results.get(&domain.name) {
@@ -64,7 +63,6 @@ pub async fn update_domains(
             },
             _ => &DomainResult::new(&domain.name),
         };
-        println!("update_domains domain_result: {:?}", domain_result);
 
         if let Some(domain_ip) = &domain_result.ip_address {
             if domain_ip == ip_address {
@@ -74,14 +72,12 @@ pub async fn update_domains(
 
         // build domain result
         let domain_result = build_domain_result(&domain, ip_address).await;
-
         // write over previous entry
         domain_results.insert(domain.name.clone(), domain_result);
     }
 }
 
 async fn build_domain_result(domain: &Cloudflare, ip_address: &str) -> DomainResult {
-    println!("building domain result");
     let mut domain_result = DomainResult::new(&domain.name);
 
     let request = match get_cloudflare_req(&domain, &ip_address) {
@@ -108,7 +104,7 @@ async fn build_domain_result(domain: &Cloudflare, ip_address: &str) -> DomainRes
 }
 
 fn verify_resposne(res: &ResponseJson) -> bool {
-    res.status_code == 200
+    res.status_code >= 200 && res.status_code < 300
 }
 
 fn get_cloudflare_req(domain: &Cloudflare, ip_addr: &str) -> Result<Request<Full<Bytes>>, String> {
