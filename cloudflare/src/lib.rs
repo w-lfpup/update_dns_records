@@ -56,25 +56,27 @@ pub async fn update_domains(
     cloudflare_domains: &CloudflareDomains,
 ) {
     for domain in cloudflare_domains {
-        let domain_result = match prev_results {
+        let mut domain_result = match prev_results {
             Some(results) => match results.domain_service_results.get(&domain.name) {
-                Some(domain) => domain,
-                _ => &DomainResult::new(&domain.name),
+                Some(domain) => domain.clone(),
+                _ => DomainResult::new(&domain.name),
             },
-            _ => &DomainResult::new(&domain.name),
+            _ => DomainResult::new(&domain.name),
         };
+
+        let hostname = domain.name.clone();
 
         if let Some(domain_ip) = &domain_result.ip_address {
             if domain_ip == ip_address {
+                domain_results.insert(hostname, domain_result);
                 continue;
             }
         }
 
         // build domain result
-        let domain_result = build_domain_result(&domain, ip_address).await;
-
+        domain_result = build_domain_result(&domain, ip_address).await;
         // write over previous entry
-        domain_results.insert(domain.name.clone(), domain_result);
+        domain_results.insert(hostname, domain_result);
     }
 }
 
@@ -105,7 +107,7 @@ async fn build_domain_result(domain: &Cloudflare, ip_address: &str) -> DomainRes
 }
 
 fn verify_resposne(res: &ResponseJson) -> bool {
-    res.status_code == 200
+    res.status_code >= 200 && res.status_code < 300
 }
 
 fn get_cloudflare_req(domain: &Cloudflare, ip_addr: &str) -> Result<Request<Full<Bytes>>, String> {

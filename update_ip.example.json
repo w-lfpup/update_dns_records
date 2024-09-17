@@ -2,7 +2,7 @@
 	"results_filepath": "./update_ip.results.example.json",
 	"ip_services": [
 		["https://checkip.amazonaws.com/", "address_as_body"],
-		["https://domains.google.com/checkip", "address_as_body"]
+		["https://api.ipify.org", "address_as_body"]
 	],
 	"dyndns2": [{
 			"service_uri": "https://domains.google.com/nic/update",

@@ -3,7 +3,7 @@ use std::path;
 
 use config;
 use domain_services;
-// use ip_services;
+use ip_services;
 use results;
 
 #[tokio::main]
