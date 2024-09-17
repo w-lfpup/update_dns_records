@@ -40,14 +40,15 @@ pub async fn update_domains(
     for domain in domains {
         let domain_result = match prev_results {
             Some(results) => match results.domain_service_results.get(&domain.hostname) {
-                Some(domain) => domain,
-                _ => &DomainResult::new(&domain.hostname),
+                Some(domain) => domain.clone(),
+                _ => DomainResult::new(&domain.hostname),
             },
-            _ => &DomainResult::new(&domain.hostname),
+            _ => DomainResult::new(&domain.hostname),
         };
 
         if let Some(domain_ip) = &domain_result.ip_address {
             if domain_ip == ip_address {
+                domain_results.insert(domain.hostname.clone(), domain_result);
                 continue;
             }
         }
@@ -55,7 +56,7 @@ pub async fn update_domains(
         // build domain result
         let domain_result = build_domain_result(&domain, ip_address).await;
 
-        // // write over previous entry
+        // write over previous entry
         domain_results.insert(domain.hostname.clone(), domain_result);
     }
 }

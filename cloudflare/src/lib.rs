@@ -56,22 +56,23 @@ pub async fn update_domains(
     cloudflare_domains: &CloudflareDomains,
 ) {
     for domain in cloudflare_domains {
-        let domain_result = match prev_results {
+        let mut domain_result = match prev_results {
             Some(results) => match results.domain_service_results.get(&domain.name) {
-                Some(domain) => domain,
-                _ => &DomainResult::new(&domain.name),
+                Some(domain) => domain.clone(),
+                _ => DomainResult::new(&domain.name),
             },
-            _ => &DomainResult::new(&domain.name),
+            _ => DomainResult::new(&domain.name),
         };
 
         if let Some(domain_ip) = &domain_result.ip_address {
             if domain_ip == ip_address {
+                domain_results.insert(domain.name.clone(), domain_result);
                 continue;
             }
         }
 
         // build domain result
-        let domain_result = build_domain_result(&domain, ip_address).await;
+        domain_result = build_domain_result(&domain, ip_address).await;
         // write over previous entry
         domain_results.insert(domain.name.clone(), domain_result);
     }

@@ -6,6 +6,21 @@ Update Dynamic DNS services with `rust` and `hyper`.
 
 The following sections describe how to create a configuration file and install `update_ip` by feature.
 
+### Install update_ip
+
+By default, no `features` or `services` are supported.
+
+All `features` must be explicitly declared.
+
+Run the following to install `update_ip` with `dyndns2` support.
+
+```
+cargo install --path update_ip \
+--features config/dyndns2 \
+--features domain_services/dyndns2 \
+--features update_ip/dyndns2
+```
+
 ### Config
 
 The `update_ip` application requires a valid configuration to run.
@@ -31,33 +46,10 @@ The `ip_services` property defines a list of `services` with a `url` and its `re
 
 All other top-level properties associate rust `features` with [services](#available-services) like `cloudflare` or the `dyndns2` standard.
 
-### Install update_ip
-
-By default, no `features` or `services` are supported.
-
-All `features` must be explicitly declared.
-
-Run the following to install `update_ip` with `dyndns2` support.
-
-```
-cargo install --path update_ip --features dyndns2
-```
-
-### Install by features
-
-`Update_ip` supports multiple `services` via rust `features`.
-
-Use the `--features` flag to include multiple `services`.
-
-```
-cargo install --path update_ip --features "dyndns2 cloudflare"
-```
 
 ### Run update_ip
 
-The `update_ip` application accepts one argument from the command line:
-
-- A valid JSON configuration file
+The `update_ip` application accepts one argument defining a path to a configuration file.
 
 ```
 update_ip <path_to_json_config>
@@ -86,7 +78,7 @@ Use the following schema to add `dyndns2` domains to the `config`.
 		"hostname": string,
 		"username": string,
 		"password": string
-	}]
+	}, ...]
 }
 ```
 
@@ -116,7 +108,7 @@ Use the following schema to add `cloudflare` domains to the `config`.
 		"comment": string | none,
 		"tags": []string | none,
 		"ttl": number | none,
-	}]
+	}, ...]
 }
 ```
 
