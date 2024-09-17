@@ -30,7 +30,7 @@ pub async fn update_domains(
     )
     .await;
 
-    #[cfg(feature = "dyndns2")]
+    #[cfg(feature = "cloudflare")]
     cloudflare::update_domains(
         &mut domain_results,
         prev_results,
