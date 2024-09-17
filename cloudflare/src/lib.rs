@@ -64,9 +64,11 @@ pub async fn update_domains(
             _ => DomainResult::new(&domain.name),
         };
 
+        let hostname = domain.name.clone();
+
         if let Some(domain_ip) = &domain_result.ip_address {
             if domain_ip == ip_address {
-                domain_results.insert(domain.name.clone(), domain_result);
+                domain_results.insert(hostname, domain_result);
                 continue;
             }
         }
@@ -74,7 +76,7 @@ pub async fn update_domains(
         // build domain result
         domain_result = build_domain_result(&domain, ip_address).await;
         // write over previous entry
-        domain_results.insert(domain.name.clone(), domain_result);
+        domain_results.insert(hostname, domain_result);
     }
 }
 

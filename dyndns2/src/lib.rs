@@ -46,9 +46,11 @@ pub async fn update_domains(
             _ => DomainResult::new(&domain.hostname),
         };
 
+        let hostname = domain.hostname.clone();
+
         if let Some(domain_ip) = &domain_result.ip_address {
             if domain_ip == ip_address {
-                domain_results.insert(domain.hostname.clone(), domain_result);
+                domain_results.insert(hostname, domain_result);
                 continue;
             }
         }
@@ -57,7 +59,7 @@ pub async fn update_domains(
         let domain_result = build_domain_result(&domain, ip_address).await;
 
         // write over previous entry
-        domain_results.insert(domain.hostname.clone(), domain_result);
+        domain_results.insert(hostname, domain_result);
     }
 }
 
@@ -88,7 +90,7 @@ async fn build_domain_result(domain: &Dyndns2, ip_address: &str) -> DomainResult
 }
 
 fn verify_resposne(res: &ResponseJson) -> bool {
-    res.status_code == 200
+    res.status_code >= 200 && res.status_code < 300
 }
 
 fn get_https_dyndns2_req(domain: &Dyndns2, ip_addr: &str) -> Result<Request<Empty<Bytes>>, String> {
