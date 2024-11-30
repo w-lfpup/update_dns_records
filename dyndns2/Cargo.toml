@@ -11,8 +11,7 @@ bytes = { workspace = true }
 http = { workspace = true }
 http-body-util = { workspace = true }
 hyper = { workspace = true }
+requests = { path = "../requests" }
+results = { path = "../results" }
 serde = { workspace = true }
 serde_json = { workspace = true }
-
-results = { path = "../results" }
-requests = { path = "../requests" }

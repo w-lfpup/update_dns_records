@@ -21,7 +21,7 @@ async fn main() {
     };
 
     // "copy" results from disk
-    let prev_results = match results::load_results_from_disk(&config.results_filepath).await {
+    let prev_results = match results::read_results_from_disk(&config.results_filepath).await {
         Ok(results) => Some(results),
         _ => None,
     };
@@ -39,10 +39,11 @@ async fn main() {
             _ => None,
         };
 
-    let results = match results::try_from(ip_service_result, domain_service_results) {
-        Ok(c) => c,
-        Err(e) => return println!("{}", e),
-    };
+    let results =
+        match results::UpdateIpResults::try_from(ip_service_result, domain_service_results) {
+            Ok(c) => c,
+            Err(e) => return println!("{}", e),
+        };
 
     // write updated results to disk
     if let Err(e) = results::write_results_to_disk(results, &config.results_filepath).await {

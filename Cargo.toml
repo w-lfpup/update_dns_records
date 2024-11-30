@@ -15,8 +15,3 @@ hyper = { version = "1", features = ["full"] }
 http-body-util = "0.1"
 rand = "0.8.5"
 base64 = { version = "0.21" }
-
-[workspace.features]
-default = []
-dyndns2 = []
-cloudflare = []
