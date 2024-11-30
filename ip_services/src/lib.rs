@@ -23,6 +23,7 @@ pub async fn get_ip_service_results(
     };
 
     let address = match response_type {
+        // there could be json responses
         _ => address_as_body::request_address_as_response_body(&ip_service).await,
     };
 

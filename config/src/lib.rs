@@ -24,46 +24,28 @@ pub struct Config {
     pub cloudflare: Vec<Cloudflare>,
 }
 
-pub enum ConfigError<'a> {
-    IoError(std::io::Error),
-    JsonError(serde_json::Error),
-    GenericError(&'a str),
-}
-
-impl fmt::Display for ConfigError<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            ConfigError::IoError(io_error) => write!(f, "{}", io_error),
-            ConfigError::JsonError(json_error) => write!(f, "{}", json_error),
-            ConfigError::GenericError(generic_error) => write!(f, "{}", generic_error,),
-        }
-    }
-}
-
-pub async fn from_path(file_path: &path::Path) -> Result<Config, ConfigError> {
+pub async fn from_path(file_path: &path::Path) -> Result<Config, String> {
     // get position relative to working directory
     let config_path = match path::absolute(file_path) {
         Ok(pb) => pb,
-        Err(e) => return Err(ConfigError::IoError(e)),
+        Err(e) => return Err(e.to_string()),
     };
 
     let parent_dir = match config_path.parent() {
         Some(p) => p,
         _ => {
-            return Err(ConfigError::GenericError(
-                "parent directory of config not found",
-            ))
+            return Err("parent directory of config not found".to_string());
         }
     };
 
     let config_json = match fs::read_to_string(&config_path).await {
         Ok(r) => r,
-        Err(e) => return Err(ConfigError::IoError(e)),
+        Err(e) => return Err(e.to_string()),
     };
 
     let mut config: Config = match serde_json::from_str(&config_json) {
         Ok(j) => j,
-        Err(e) => return Err(ConfigError::JsonError(e)),
+        Err(e) => return Err(e.to_string()),
     };
 
     // find a way to verify the parent directory exists
