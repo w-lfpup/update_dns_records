@@ -8,12 +8,13 @@ use results;
 
 #[tokio::main]
 async fn main() {
-    let args = match env::args().nth(1) {
+    let config_path_str = match env::args().nth(1) {
         Some(a) => a,
         None => return println!("argument error:\nconfig file not found."),
     };
 
-    let config_path = path::Path::new(&args);
+    let config_path = path::Path::new(&config_path_str);
+
     let config = match config::from_path(config_path).await {
         Ok(c) => c,
         Err(e) => return println!("configuration error:\n{}", e),
