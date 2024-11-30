@@ -8,19 +8,20 @@ use results;
 
 #[tokio::main]
 async fn main() {
-    let args = match env::args().nth(1) {
+    let config_path_str = match env::args().nth(1) {
         Some(a) => a,
         None => return println!("argument error:\nconfig file not found."),
     };
 
-    let config_path = path::Path::new(&args);
+    let config_path = path::Path::new(&config_path_str);
+
     let config = match config::from_path(config_path).await {
         Ok(c) => c,
         Err(e) => return println!("configuration error:\n{}", e),
     };
 
     // "copy" results from disk
-    let prev_results = match results::load_results_from_disk(&config.results_filepath).await {
+    let prev_results = match results::read_results_from_disk(&config.results_filepath).await {
         Ok(results) => Some(results),
         _ => None,
     };
@@ -39,8 +40,7 @@ async fn main() {
         };
 
     let results =
-        match results::UpdateIpResults::try_from_results(ip_service_result, domain_service_results)
-        {
+        match results::UpdateIpResults::try_from(ip_service_result, domain_service_results) {
             Ok(c) => c,
             Err(e) => return println!("{}", e),
         };

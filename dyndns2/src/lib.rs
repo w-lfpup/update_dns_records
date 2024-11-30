@@ -12,7 +12,6 @@ use results::{DomainResult, ResponseJson, UpdateIpResults};
     Implements a subset of the dyndns2 protocol.
     https://help.dyn.com/remote-access-api/perform-update/
     https://help.dyn.com/remote-access-api/return-codes/
-    https://support.google.com/domains/answer/6147083?hl=en
 
     Not all responses are implemented but all responses are recorded.
     Only the 911 response body warrants a retry
