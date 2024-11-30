@@ -6,10 +6,12 @@ use tokio::fs;
 use ip_services::IpServices;
 
 // ddns services
-#[cfg(feature = "cloudflare")]
-use cloudflare::Cloudflare;
+
 #[cfg(feature = "dyndns2")]
 use dyndns2::Dyndns2;
+
+#[cfg(feature = "cloudflare")]
+use cloudflare::Cloudflare;
 
 // add domain services here
 // beware of hydra
