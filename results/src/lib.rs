@@ -48,21 +48,18 @@ impl DomainResult {
     }
 }
 
-impl UpdateIpResults {
-    pub fn try_from_results(
-        ip_service_result: Option<IpServiceResult>,
-        domain_service_results: Option<HashMap<String, DomainResult>>,
-    ) -> Result<UpdateIpResults, String> {
-        if let (Some(ip_result), Some(domain_results)) = (ip_service_result, domain_service_results)
-        {
-            return Ok(UpdateIpResults {
-                ip_service_result: ip_result,
-                domain_service_results: domain_results,
-            });
-        }
-
-        Err("couldn't get resutls".to_string())
+pub fn try_from(
+    ip_service_result: Option<IpServiceResult>,
+    domain_service_results: Option<HashMap<String, DomainResult>>,
+) -> Result<UpdateIpResults, String> {
+    if let (Some(ip_result), Some(domain_results)) = (ip_service_result, domain_service_results) {
+        return Ok(UpdateIpResults {
+            ip_service_result: ip_result,
+            domain_service_results: domain_results,
+        });
     }
+
+    Err("couldn't get results".to_string())
 }
 
 pub async fn load_results_from_disk(results_filepath: &PathBuf) -> Result<UpdateIpResults, String> {
