@@ -6,10 +6,12 @@ use tokio::fs;
 use ip_services::IpServices;
 
 // ddns services
-#[cfg(feature = "cloudflare")]
-use cloudflare::Cloudflare;
+
 #[cfg(feature = "dyndns2")]
 use dyndns2::Dyndns2;
+
+#[cfg(feature = "cloudflare")]
+use cloudflare::Cloudflare;
 
 // add domain services here
 // beware of hydra
@@ -18,9 +20,9 @@ pub struct Config {
     pub results_filepath: path::PathBuf,
     pub ip_services: IpServices,
     #[cfg(feature = "dyndns2")]
-    pub dyndns2: Vec<Dyndns2>,
+    pub dyndns2: Option<Vec<Dyndns2>>,
     #[cfg(feature = "cloudflare")]
-    pub cloudflare: Vec<Cloudflare>,
+    pub cloudflare: Option<Vec<Cloudflare>>,
 }
 
 pub async fn from_path(file_path: &path::Path) -> Result<Config, String> {

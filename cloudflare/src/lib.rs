@@ -53,9 +53,14 @@ pub async fn update_domains(
     domain_results: &mut HashMap<String, DomainResult>,
     prev_results: &Option<UpdateIpResults>,
     ip_address: &str,
-    cloudflare_domains: &CloudflareDomains,
+    optional_domains: &Option<CloudflareDomains>,
 ) {
-    for domain in cloudflare_domains {
+    let domains = match optional_domains {
+        Some(domains) => domains,
+        _ => return,
+    };
+
+    for domain in domains {
         let mut domain_result = match prev_results {
             Some(results) => match results.domain_service_results.get(&domain.name) {
                 Some(domain) => domain.clone(),

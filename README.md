@@ -8,19 +8,9 @@ The following sections describe how to install and run `update_ip`.
 
 ### Install
 
-All `features` are built by default.
+No features are built by defaut. Features are directly correlated to dynamic dns services.
 
-```sh
-cargo install --path update_ip
-```
-
-For minimal installations a `--features` flag must be explicitly declared.
-
-Run the following to install `update_ip` with `dyndns2` support.
-
-```sh
-cargo install --path update_ip --features dyndns2
-```
+For now, all features must be explicityly declared with the `--features` flag.
 
 ### Configuration
 
