@@ -1,6 +1,6 @@
 # Update Dns Records
 
-Send ip address updates to Dynamic DNS services.
+Send ip address updates to DNS services.
 
 ## How to use
 
