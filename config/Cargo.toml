@@ -14,6 +14,6 @@ serde_json = { workspace = true }
 tokio = { workspace = true }
 
 [features]
-default = []
+default = ["cloudflare", "dyndns2"]
 dyndns2 = []
 cloudflare = []
