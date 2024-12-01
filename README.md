@@ -12,12 +12,6 @@ No features are built by defaut. Features are directly correlated to dynamic dns
 
 For now, all features must be explicityly declared with the `--features` flag.
 
-Run the following to install `update_ip` with `dyndns2` support.
-
-```sh
-cargo install --path update_ip --features dyndns2
-```
-
 ### Configuration
 
 The `update_ip` application requires a valid JSON configuration to run.
