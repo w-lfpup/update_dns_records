@@ -1,23 +1,23 @@
-# update_ip
+# Update Dns Records
 
 Send ip address updates to Dynamic DNS services.
 
 ## How to use
 
-The following sections describe how to install and run `update_ip`.
+The following sections describe how to install and run `update_dns_records`.
 
 ### Install
 
-No features are built by defaut. Features are directly correlated to dynamic dns services.
+All available services are included by default. Rust features are directly correlated to dns services.
 
-For now, all features must be explicityly declared with the `--features` flag.
+For now, all minimal or custom builds need to use `--features` flags.
 
 ### Configuration
 
-The `update_ip` application requires a valid JSON configuration to run.
+The `update_dns_records` application requires a valid JSON configuration to run.
 
 An example configuration example can be found at
-`./update_ip.example.json`
+`./update_dns_records.example.json`
 
 ```JSON
 {
@@ -35,21 +35,21 @@ The `results_filepath` property can be relative to the location of the `config` 
 
 The `ip_services` property defines a list of `services` with a `url` and its `response_type`.
 
-### Run update_ip
+### Run update_dns_records
 
-The `update_ip` application accepts one argument defining a path to a configuration file.
+The `update_dns_records` application accepts one argument defining a path to a configuration file.
 
 ```
-update_ip <path_to_json_config>
+update_dns_records <path_to_json_config>
 ```
 
-The results of the `update_ip` will be written to the `results_filepath` property of the `config`.
+The results of the `update_dns_records` will be written to the `results_filepath` property of the `config`.
 
 Paths can be absolute or relative to the configuration file.
 
 ## Available services
 
-The `update_ip` application provides support for the following `services`:
+The `update_dns_records` application provides support for the following `services`:
 
 - [dyndns2](#dyndns2)
 - [cloudflare](#cloudflare)
