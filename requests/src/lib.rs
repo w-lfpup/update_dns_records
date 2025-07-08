@@ -2,7 +2,7 @@ use bytes::Buf;
 use bytes::Bytes;
 use http::Uri;
 use http::{Request, Response};
-use http_body_util::{BodyExt, Empty, Full};
+use http_body_util::{BodyExt, Full};
 use hyper::body::Incoming;
 use hyper::client::conn::http1;
 use hyper_util::rt::TokioIo;
@@ -10,63 +10,16 @@ use native_tls::TlsConnector;
 use std::io;
 use std::time::SystemTime;
 use tokio::net::TcpStream;
+use serde::{Deserialize, Serialize};
 
-use results::ResponseJson;
-
-pub fn create_request_with_empty_body(url_string: &str) -> Result<Request<Empty<Bytes>>, String> {
-    let uri = match http::Uri::try_from(url_string) {
-        Ok(u) => u,
-        Err(e) => return Err(e.to_string()),
-    };
-
-    let (_, authority) = match get_host_and_authority(&uri) {
-        Some(u) => u.clone(),
-        _ => return Err("authority not found in url".to_string()),
-    };
-
-    let req = match Request::builder()
-        .uri(uri)
-        .header(hyper::header::HOST, authority.as_str())
-        .body(Empty::<Bytes>::new())
-    {
-        Ok(r) => r,
-        Err(e) => return Err(e.to_string()),
-    };
-
-    Ok(req)
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct ResponseJson {
+    pub status_code: u16,
+    pub body: String,
+    pub timestamp: u128,
 }
 
 pub async fn request_http1_tls_response(
-    req: Request<Empty<Bytes>>,
-) -> Result<ResponseJson, String> {
-    let (host, authority) = match get_host_and_authority(&req.uri()) {
-        Some(stream) => stream,
-        _ => return Err("failed to get authority from uri".to_string()),
-    };
-
-    let io = match create_tls_stream(&host, &authority).await {
-        Ok(stream) => stream,
-        Err(e) => return Err(e),
-    };
-
-    let (mut sender, conn) = match http1::handshake(io).await {
-        Ok(handshake) => handshake,
-        Err(e) => return Err(e.to_string()),
-    };
-
-    tokio::task::spawn(async move {
-        if let Err(_err) = conn.await { /* log connection error */ }
-    });
-
-    let res = match sender.send_request(req).await {
-        Ok(res) => res,
-        Err(e) => return Err(e.to_string()),
-    };
-
-    convert_response_to_json_struct(res).await
-}
-
-pub async fn boxed_request_http1_tls_response(
     req: Request<Full<Bytes>>,
 ) -> Result<ResponseJson, String> {
     let (host, authority) = match get_host_and_authority(&req.uri()) {

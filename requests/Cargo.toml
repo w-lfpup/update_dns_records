@@ -13,5 +13,6 @@ hyper = { workspace = true }
 hyper-util = { workspace = true }
 native-tls = { workspace = true }
 results = { path = "../results" }
+serde = { workspace = true }
 tokio = { workspace = true }
 tokio-native-tls = { workspace = true }

@@ -4,13 +4,6 @@ use std::path::PathBuf;
 use tokio::fs;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct ResponseJson {
-    pub status_code: u16,
-    pub body: String,
-    pub timestamp: u128,
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct UpdateIpResults {
     pub ip_service_result: IpServiceResult,
     pub domain_service_results: HashMap<String, DomainResult>,
