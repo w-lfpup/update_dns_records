@@ -1,16 +1,14 @@
-use bytes::Buf;
-use bytes::Bytes;
-use http::Uri;
-use http::{Request, Response};
+use bytes::{Buf, Bytes};
 use http_body_util::{BodyExt, Full};
 use hyper::body::Incoming;
 use hyper::client::conn::http1;
+use hyper::{Request, Response, Uri};
 use hyper_util::rt::TokioIo;
 use native_tls::TlsConnector;
+use serde::{Deserialize, Serialize};
 use std::io;
 use std::time::SystemTime;
 use tokio::net::TcpStream;
-use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct ResponseJson {
@@ -19,9 +17,30 @@ pub struct ResponseJson {
     pub timestamp: u128,
 }
 
-pub async fn request_http1_tls_response(
-    req: Request<Full<Bytes>>,
-) -> Result<ResponseJson, String> {
+pub fn create_request_with_empty_body(url_string: &str) -> Result<Request<Full<Bytes>>, String> {
+    let uri = match hyper::Uri::try_from(url_string) {
+        Ok(u) => u,
+        Err(e) => return Err(e.to_string()),
+    };
+
+    let (_, authority) = match get_host_and_authority(&uri) {
+        Some(u) => u.clone(),
+        _ => return Err("authority not found in url".to_string()),
+    };
+
+    let req = match Request::builder()
+        .uri(uri)
+        .header(hyper::header::HOST, authority.as_str())
+        .body(Full::new(bytes::Bytes::new()))
+    {
+        Ok(r) => r,
+        Err(e) => return Err(e.to_string()),
+    };
+
+    Ok(req)
+}
+
+pub async fn request_http1_tls_response(req: Request<Full<Bytes>>) -> Result<ResponseJson, String> {
     let (host, authority) = match get_host_and_authority(&req.uri()) {
         Some(stream) => stream,
         _ => return Err("failed to get authority from uri".to_string()),
@@ -52,7 +71,7 @@ pub async fn request_http1_tls_response(
 fn get_host_and_authority(uri: &Uri) -> Option<(&str, String)> {
     let scheme = match uri.scheme() {
         Some(s) => s.as_str(),
-        _ => http::uri::Scheme::HTTPS.as_str(),
+        _ => hyper::http::uri::Scheme::HTTPS.as_str(),
     };
 
     let port = match (uri.port(), scheme) {

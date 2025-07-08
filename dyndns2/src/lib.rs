@@ -1,12 +1,11 @@
 use base64::{engine::general_purpose, Engine as _};
 use bytes::Bytes;
-use http::Request;
-use http_body_util::Empty;
+use http_body_util::Full;
+use hyper::Request;
+use requests::{request_http1_tls_response, ResponseJson};
+use results::{DomainResult, UpdateIpResults};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
-use requests;
-use results::{DomainResult, ResponseJson, UpdateIpResults};
 
 /*
     Implements a subset of the dyndns2 protocol.
@@ -81,7 +80,7 @@ async fn build_domain_result(domain: &Dyndns2, ip_address: &str) -> DomainResult
     // update domain service
     // create json-able struct from response
     // add to domain result
-    match requests::request_http1_tls_response(request).await {
+    match request_http1_tls_response(request).await {
         Ok(r) => {
             if verify_resposne(&r) {
                 domain_result.ip_address = Some(ip_address.to_string());
@@ -97,9 +96,9 @@ fn verify_resposne(res: &ResponseJson) -> bool {
     res.status_code >= 200 && res.status_code < 300
 }
 
-fn get_https_dyndns2_req(domain: &Dyndns2, ip_addr: &str) -> Result<Request<Empty<Bytes>>, String> {
+fn get_https_dyndns2_req(domain: &Dyndns2, ip_addr: &str) -> Result<Request<Full<Bytes>>, String> {
     let uri_str = domain.service_uri.clone() + "?hostname=" + &domain.hostname + "&myip=" + ip_addr;
-    let uri = match uri_str.parse::<http::Uri>() {
+    let uri = match uri_str.parse::<hyper::Uri>() {
         Ok(u) => u,
         Err(e) => return Err(e.to_string()),
     };
@@ -117,7 +116,7 @@ fn get_https_dyndns2_req(domain: &Dyndns2, ip_addr: &str) -> Result<Request<Empt
         .header(hyper::header::HOST, host)
         .header(hyper::header::USER_AGENT, CLIENT_HEADER_VALUE)
         .header(hyper::header::AUTHORIZATION, auth_value)
-        .body(Empty::<Bytes>::new())
+        .body(Full::new(bytes::Bytes::new()))
     {
         Ok(req) => Ok(req),
         Err(e) => Err(e.to_string()),

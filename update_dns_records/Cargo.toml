@@ -9,7 +9,6 @@ edition = "2021"
 bytes = { workspace = true }
 config = { path = "../config" }
 domain_services = { path = "../domain_services" }
-http = { workspace = true }
 http-body-util = { workspace = true }
 hyper = { workspace = true }
 hyper-util = { workspace = true }

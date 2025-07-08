@@ -1,12 +1,12 @@
 use serde::{Deserialize, Serialize};
 
 use bytes::Bytes;
-use http::Request;
 use http_body_util::Full;
+use hyper::Request;
 use std::collections::HashMap;
 
-use requests;
-use results::{DomainResult, ResponseJson, UpdateIpResults};
+use requests::{request_http1_tls_response, ResponseJson};
+use results::{DomainResult, UpdateIpResults};
 
 // following types are based on:
 // https://developers.cloudflare.com/api/operations/dns-records-for-a-zone-update-dns-record
@@ -99,7 +99,7 @@ async fn build_domain_result(domain: &Cloudflare, ip_address: &str) -> DomainRes
     // update domain service
     // create json-able struct from response
     // add to domain result
-    match requests::boxed_request_http1_tls_response(request).await {
+    match request_http1_tls_response(request).await {
         Ok(r) => {
             if verify_resposne(&r) {
                 domain_result.ip_address = Some(ip_address.to_string());
