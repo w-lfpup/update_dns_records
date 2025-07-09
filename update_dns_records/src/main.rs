@@ -2,12 +2,12 @@ use std::{env, path};
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
-    let config_path_str = match env::args().nth(1) {
+    let filepath_str = match env::args().nth(1) {
         Some(a) => a,
         None => return Err("argument error:\nconfig file not found.".to_string()),
     };
 
-    let config_path = path::Path::new(&config_path_str);
+    let config_path = path::Path::new(&filepath_str);
 
     let config = match config::from_path(config_path).await {
         Ok(c) => c,
