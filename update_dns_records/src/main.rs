@@ -1,10 +1,4 @@
-use std::env;
-use std::path;
-
-use config;
-use domain_services;
-use ip_services;
-use results;
+use std::{env, path};
 
 #[tokio::main]
 async fn main() {
