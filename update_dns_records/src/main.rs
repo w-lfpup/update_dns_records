@@ -1,17 +1,17 @@
 use std::{env, path};
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), String> {
     let config_path_str = match env::args().nth(1) {
         Some(a) => a,
-        None => return println!("argument error:\nconfig file not found."),
+        None => return Err("argument error:\nconfig file not found.".to_string()),
     };
 
     let config_path = path::Path::new(&config_path_str);
 
     let config = match config::from_path(config_path).await {
         Ok(c) => c,
-        Err(e) => return println!("configuration error:\n{}", e),
+        Err(e) => return Err(e),
     };
 
     // "copy" results from disk
@@ -26,8 +26,5 @@ async fn main() {
 
     let results = results::UpdateIpResults::try_from(ip_service_result, domain_service_results);
 
-    // write updated results to disk
-    if let Err(e) = results::write_results_to_disk(results, &config.results_filepath).await {
-        return println!("file error:\n{}", e);
-    };
+    results::write_results_to_disk(results, &config.results_filepath).await
 }
