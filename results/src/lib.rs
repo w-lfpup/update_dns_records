@@ -70,10 +70,15 @@ pub async fn read_results_from_disk(results_filepath: &PathBuf) -> Result<Update
 }
 
 pub async fn write_results_to_disk(
-    results: UpdateIpResults,
+    results: Result<UpdateIpResults, String>,
     results_filepath: &PathBuf,
 ) -> Result<(), String> {
-    let json_str = match serde_json::to_string_pretty(&results) {
+    let ready_results = match results {
+        Ok(rs) => rs,
+        Err(e) => return Err(e),
+    };
+
+    let json_str = match serde_json::to_string_pretty(&ready_results) {
         Ok(f) => f,
         Err(e) => return Err(e.to_string()),
     };
