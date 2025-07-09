@@ -10,7 +10,7 @@ use dyndns2;
 
 pub async fn update_domains(
     config: &Config,
-    prev_results: &Option<UpdateIpResults>,
+    prev_results: &Result<UpdateIpResults, String>,
     ip_service_result: &Result<IpServiceResult, String>,
 ) -> Result<HashMap<String, DomainResult>, String> {
     let ip_address = match get_ip_address(prev_results, ip_service_result) {
@@ -45,7 +45,7 @@ pub async fn update_domains(
 // function to get ip address
 
 fn get_ip_address(
-    prev_results: &Option<UpdateIpResults>,
+    prev_results: &Result<UpdateIpResults, String>,
     ip_service_result: &Result<IpServiceResult, String>,
 ) -> Result<String, String> {
     if let Ok(ip_result) = ip_service_result {
@@ -53,7 +53,7 @@ fn get_ip_address(
             return Ok(ip_addr.clone());
         }
     }
-    if let Some(prev_result) = prev_results {
+    if let Ok(prev_result) = prev_results {
         if let Some(ip_addr) = &prev_result.ip_service_result.ip_address {
             return Ok(ip_addr.clone());
         }

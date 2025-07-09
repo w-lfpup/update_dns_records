@@ -51,7 +51,7 @@ Only update changed parameters
 
 pub async fn update_domains(
     domain_results: &mut HashMap<String, DomainResult>,
-    prev_results: &Option<UpdateIpResults>,
+    prev_results: &Result<UpdateIpResults, String>,
     ip_address: &str,
     optional_domains: &Option<CloudflareDomains>,
 ) {
@@ -62,7 +62,7 @@ pub async fn update_domains(
 
     for domain in domains {
         let mut domain_result = match prev_results {
-            Some(results) => match results.domain_service_results.get(&domain.name) {
+            Ok(results) => match results.domain_service_results.get(&domain.name) {
                 Some(domain) => domain.clone(),
                 _ => DomainResult::new(&domain.name),
             },

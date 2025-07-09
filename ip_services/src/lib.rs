@@ -10,11 +10,11 @@ pub type IpServices = Vec<(String, String)>;
 
 pub async fn fetch_service_results(
     ip_services: &IpServices,
-    prev_results: &Option<UpdateIpResults>,
+    prev_results: &Result<UpdateIpResults, String>,
 ) -> Result<IpServiceResult, String> {
     let service = match prev_results {
-        Some(results) => &results.ip_service_result.service,
-        None => "previous-results-do-not-exist",
+        Ok(results) => &results.ip_service_result.service,
+        _ => "previous-results-do-not-exist",
     };
 
     let (ip_service, response_type) = match get_random_ip_service(ip_services, service) {

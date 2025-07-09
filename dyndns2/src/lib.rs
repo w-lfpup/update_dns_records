@@ -31,7 +31,7 @@ const CLIENT_HEADER_VALUE: &str = "hyper/1.0 rust-client";
 // must return results
 pub async fn update_domains(
     domain_results: &mut HashMap<String, DomainResult>,
-    prev_results: &Option<UpdateIpResults>,
+    prev_results: &Result<UpdateIpResults, String>,
     ip_address: &str,
     optional_domains: &Option<Dyndns2Domains>,
 ) {
@@ -42,7 +42,7 @@ pub async fn update_domains(
 
     for domain in domains {
         let domain_result = match prev_results {
-            Some(results) => match results.domain_service_results.get(&domain.hostname) {
+            Ok(results) => match results.domain_service_results.get(&domain.hostname) {
                 Some(domain) => domain.clone(),
                 _ => DomainResult::new(&domain.hostname),
             },

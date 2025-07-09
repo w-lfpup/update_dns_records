@@ -21,10 +21,7 @@ async fn main() {
     };
 
     // "copy" results from disk
-    let prev_results = match results::read_results_from_disk(&config.results_filepath).await {
-        Ok(results) => Some(results),
-        _ => None,
-    };
+    let prev_results = results::read_results_from_disk(&config.results_filepath).await;
 
     // update results
     let ip_service_result =
