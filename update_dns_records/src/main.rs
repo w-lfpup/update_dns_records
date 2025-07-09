@@ -31,10 +31,7 @@ async fn main() {
         ip_services::fetch_service_results(&config.ip_services, &prev_results).await;
 
     let domain_service_results =
-        match domain_services::update_domains(&config, &prev_results, &ip_service_result).await {
-            Ok(results) => Some(results),
-            _ => None,
-        };
+        domain_services::update_domains(&config, &prev_results, &ip_service_result).await;
 
     let results =
         match results::UpdateIpResults::try_from(ip_service_result, domain_service_results) {
