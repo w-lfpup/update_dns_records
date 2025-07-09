@@ -1,9 +1,8 @@
+use ip_services::IpServices;
 use serde::{Deserialize, Serialize};
 use serde_json;
 use std::path;
 use tokio::fs;
-
-use ip_services::IpServices;
 
 // ddns services
 #[cfg(feature = "cloudflare")]

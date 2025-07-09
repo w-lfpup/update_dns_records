@@ -8,7 +8,7 @@ mod address_as_body;
 // beware of potential hydra
 pub type IpServices = Vec<(String, String)>;
 
-pub async fn get_ip_service_results(
+pub async fn fetch_service_results(
     ip_services: &IpServices,
     prev_results: &Option<UpdateIpResults>,
 ) -> Result<IpServiceResult, String> {

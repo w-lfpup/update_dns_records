@@ -4,29 +4,6 @@ use std::path::PathBuf;
 use tokio::fs;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct UpdateIpResults {
-    pub ip_service_result: IpServiceResult,
-    pub domain_service_results: HashMap<String, DomainResult>,
-}
-
-impl UpdateIpResults {
-    pub fn try_from(
-        ip_service_result: Option<IpServiceResult>,
-        domain_service_results: Option<HashMap<String, DomainResult>>,
-    ) -> Result<UpdateIpResults, String> {
-        if let (Some(ip_result), Some(domain_results)) = (ip_service_result, domain_service_results)
-        {
-            return Ok(UpdateIpResults {
-                ip_service_result: ip_result,
-                domain_service_results: domain_results,
-            });
-        }
-
-        Err("couldn't get results".to_string())
-    }
-}
-
-#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct IpServiceResult {
     pub service: String,
     pub ip_address: Option<String>,
@@ -55,6 +32,28 @@ impl DomainResult {
             ip_address: None,
             errors: Vec::<String>::new(),
         }
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct UpdateIpResults {
+    pub ip_service_result: IpServiceResult,
+    pub domain_service_results: HashMap<String, DomainResult>,
+}
+
+impl UpdateIpResults {
+    pub fn try_from(
+        ip_service_result: Result<IpServiceResult, String>,
+        domain_service_results: Option<HashMap<String, DomainResult>>,
+    ) -> Result<UpdateIpResults, String> {
+        if let (Ok(ip_result), Some(domain_results)) = (ip_service_result, domain_service_results) {
+            return Ok(UpdateIpResults {
+                ip_service_result: ip_result,
+                domain_service_results: domain_results,
+            });
+        }
+
+        Err("couldn't get results".to_string())
     }
 }
 
