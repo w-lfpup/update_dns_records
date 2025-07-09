@@ -1,10 +1,14 @@
+use bytes::Bytes;
+use http_body_util::Full;
+use hyper::Request;
+use requests::{get_host_and_authority, request_http1_tls_response, ResponseJson};
 use std::net;
 
 use requests;
 
 // request with empty body returns response body with IP Address
 pub async fn request_address_as_response_body(service: &str) -> Result<String, String> {
-    let request = match requests::create_request_with_empty_body(service) {
+    let request = match create_request_with_empty_body(service) {
         Ok(req) => req,
         Err(e) => return Err(e),
     };
@@ -25,4 +29,27 @@ pub async fn request_address_as_response_body(service: &str) -> Result<String, S
     };
 
     Ok(ip_address)
+}
+
+pub fn create_request_with_empty_body(url_string: &str) -> Result<Request<Full<Bytes>>, String> {
+    let uri = match hyper::Uri::try_from(url_string) {
+        Ok(u) => u,
+        Err(e) => return Err(e.to_string()),
+    };
+
+    let (_, authority) = match requests::get_host_and_authority(&uri) {
+        Some(u) => u.clone(),
+        _ => return Err("authority not found in url".to_string()),
+    };
+
+    let req = match Request::builder()
+        .uri(uri)
+        .header(hyper::header::HOST, authority.as_str())
+        .body(Full::new(bytes::Bytes::new()))
+    {
+        Ok(r) => r,
+        Err(e) => return Err(e.to_string()),
+    };
+
+    Ok(req)
 }

@@ -17,29 +17,6 @@ pub struct ResponseJson {
     pub timestamp: u128,
 }
 
-pub fn create_request_with_empty_body(url_string: &str) -> Result<Request<Full<Bytes>>, String> {
-    let uri = match hyper::Uri::try_from(url_string) {
-        Ok(u) => u,
-        Err(e) => return Err(e.to_string()),
-    };
-
-    let (_, authority) = match get_host_and_authority(&uri) {
-        Some(u) => u.clone(),
-        _ => return Err("authority not found in url".to_string()),
-    };
-
-    let req = match Request::builder()
-        .uri(uri)
-        .header(hyper::header::HOST, authority.as_str())
-        .body(Full::new(bytes::Bytes::new()))
-    {
-        Ok(r) => r,
-        Err(e) => return Err(e.to_string()),
-    };
-
-    Ok(req)
-}
-
 pub async fn request_http1_tls_response(req: Request<Full<Bytes>>) -> Result<ResponseJson, String> {
     let (host, authority) = match get_host_and_authority(&req.uri()) {
         Some(stream) => stream,
@@ -68,7 +45,7 @@ pub async fn request_http1_tls_response(req: Request<Full<Bytes>>) -> Result<Res
     convert_response_to_json_struct(res).await
 }
 
-fn get_host_and_authority(uri: &Uri) -> Option<(&str, String)> {
+pub fn get_host_and_authority(uri: &Uri) -> Option<(&str, String)> {
     let scheme = match uri.scheme() {
         Some(s) => s.as_str(),
         _ => hyper::http::uri::Scheme::HTTPS.as_str(),
