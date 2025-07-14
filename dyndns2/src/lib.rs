@@ -94,6 +94,7 @@ async fn build_domain_result(domain: &Dyndns2, ip_address: &str) -> DomainResult
 
 fn verify_resposne(res: &ResponseJson) -> bool {
     res.status_code >= 200 && res.status_code < 300
+    // if body starts with nchg | good 
 }
 
 fn get_https_dyndns2_req(domain: &Dyndns2, ip_addr: &str) -> Result<Request<Full<Bytes>>, String> {

@@ -113,6 +113,7 @@ async fn build_domain_result(domain: &Cloudflare, ip_address: &str) -> DomainRes
 
 fn verify_resposne(res: &ResponseJson) -> bool {
     res.status_code >= 200 && res.status_code < 300
+    // minimum response { success: true | false }
 }
 
 fn get_cloudflare_req(domain: &Cloudflare, ip_addr: &str) -> Result<Request<Full<Bytes>>, String> {
