@@ -60,14 +60,12 @@ Use the following schema to add `dyndns2` domains to the `config`.
 
 ```JSON
 {
-	"results_filepath": "string",
-	...
 	"dyndns2": [{
 		"service_uri": "string",
 		"hostname": "string",
 		"username": "string",
 		"password": "string"
-	}, ...]
+	}]
 }
 ```
 
@@ -86,8 +84,6 @@ Use the following schema to add `cloudflare` domains to the `config`.
 
 ```JSON
 {
-	"results_filepath": "string",
-	...
 	"cloudflare": [{
 		"name": "yourdomain.com",
 		"email": "string",
@@ -99,7 +95,7 @@ Use the following schema to add `cloudflare` domains to the `config`.
 		"comment": "string | null",
 		"tags": "[]string | null",
 		"ttl": "number | null",
-	}, ...]
+	}]
 }
 ```
 

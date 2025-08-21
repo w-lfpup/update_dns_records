@@ -3,10 +3,15 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use tokio::fs;
 
+use crate::requests::ResponseJson;
+
+pub type IpServices = Vec<(String, String)>;
+
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct IpServiceResult {
     pub service: String,
     pub ip_address: Option<String>,
+    pub response: Option<ResponseJson>,
 }
 
 impl IpServiceResult {
@@ -14,12 +19,13 @@ impl IpServiceResult {
         IpServiceResult {
             service: service.to_string(),
             ip_address: None,
+            response: None,
         }
     }
 }
 
-DONT only SAVE errors. Save response.
-If validated save save ip_address update and results
+// DONT only SAVE errors. Save response.
+// If validated save save ip_address update and results
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct DomainResult {

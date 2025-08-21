@@ -7,12 +7,6 @@ mod address_as_body;
 // Save response in results
 // Signal ip has changed somehow
 
-
-
-
-
-
-
 // ip services are accounted for by response type
 // beware of potential hydra
 pub type IpServices = Vec<(String, String)>;
