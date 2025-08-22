@@ -14,7 +14,7 @@ use tokio::net::TcpStream;
 pub struct ResponseJson {
     pub status_code: u16,
     pub body: String,
-    pub timestamp: u128,
+    // pub timestamp: u128,
 }
 
 pub async fn request_http1_tls_response(req: Request<Full<Bytes>>) -> Result<ResponseJson, String> {
@@ -94,10 +94,10 @@ async fn create_tls_stream(
 }
 
 async fn convert_response_to_json_struct(res: Response<Incoming>) -> Result<ResponseJson, String> {
-    let timestamp = match get_timestamp() {
-        Ok(n) => n,
-        Err(e) => return Err(e),
-    };
+    // let timestamp = match get_timestamp() {
+    //     Ok(n) => n,
+    //     Err(e) => return Err(e),
+    // };
 
     let status = res.status().as_u16();
 
@@ -109,7 +109,7 @@ async fn convert_response_to_json_struct(res: Response<Incoming>) -> Result<Resp
     Ok(ResponseJson {
         status_code: status,
         body: body_str,
-        timestamp: timestamp,
+        // timestamp: timestamp,
     })
 }
 
@@ -128,9 +128,9 @@ async fn response_body_to_string(response: Response<Incoming>) -> Result<String,
     Ok(ip_str.to_string())
 }
 
-fn get_timestamp() -> Result<u128, String> {
-    match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
-        Ok(n) => Ok(n.as_millis()),
-        Err(e) => Err(e.to_string()),
-    }
-}
+// fn get_timestamp() -> Result<u128, String> {
+//     match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
+//         Ok(n) => Ok(n.as_millis()),
+//         Err(e) => Err(e.to_string()),
+//     }
+// }
