@@ -1,6 +1,8 @@
 use std::{env, path};
 
-// mod config;
+mod toolkit;
+
+use crate::toolkit::config;
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
@@ -11,10 +13,10 @@ async fn main() -> Result<(), String> {
 
     let config_path = path::Path::new(&filepath_str);
 
-    // let config = match config::from_path(config_path).await {
-    //     Ok(c) => c,
-    //     Err(e) => return Err(e),
-    // };
+    let config = match config::from_path(config_path).await {
+        Ok(c) => c,
+        Err(e) => return Err(e),
+    };
 
     // "copy" results from disk
     // let prev_results = results::read_results_from_disk(&config.results_filepath).await;

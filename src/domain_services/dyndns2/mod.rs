@@ -16,13 +16,13 @@ use std::collections::HashMap;
     Only the 911 response body warrants a retry
 */
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct Dyndns2 {
-    pub service_uri: String,
-    pub hostname: String,
-    pub username: String,
-    pub password: String,
-}
+// #[derive(Clone, Serialize, Deserialize, Debug)]
+// pub struct Dyndns2 {
+//     pub service_uri: String,
+//     pub hostname: String,
+//     pub username: String,
+//     pub password: String,
+// }
 
 pub type Dyndns2Domains = Vec<Dyndns2>;
 

@@ -1,14 +1,15 @@
-use ip_services::IpServices;
 use serde::{Deserialize, Serialize};
 use serde_json;
 use std::path;
 use tokio::fs;
 
+use crate::toolkit::ip_services::IpServices;
+
 // ddns services
 #[cfg(feature = "cloudflare")]
-use cloudflare::Cloudflare;
+use crate::toolkit::domain_services::Cloudflare;
 #[cfg(feature = "dyndns2")]
-use dyndns2::Dyndns2;
+use crate::toolkit::domain_services::Dyndns2;
 
 // add domain services here
 // beware of hydra

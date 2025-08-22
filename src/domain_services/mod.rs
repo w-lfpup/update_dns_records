@@ -42,8 +42,6 @@ pub async fn update_domains(
     Ok(domain_results)
 }
 
-// function to get ip address
-
 fn get_ip_address(
     prev_results: &Result<UpdateIpResults, String>,
     ip_service_result: &Result<IpServiceResult, String>,

@@ -9,7 +9,7 @@ mod address_as_body;
 
 // ip services are accounted for by response type
 // beware of potential hydra
-pub type IpServices = Vec<(String, String)>;
+// pub type IpServices = Vec<(String, String)>;
 
 pub async fn fetch_service_results(
     ip_services: &IpServices,

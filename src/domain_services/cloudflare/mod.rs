@@ -11,19 +11,19 @@ use results::{DomainResult, UpdateIpResults};
 // following types are based on:
 // https://developers.cloudflare.com/api/operations/dns-records-for-a-zone-update-dns-record
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct Cloudflare {
-    pub email: String,
-    pub zone_id: String,
-    pub dns_record_id: String,
-    pub api_token: String,
-    pub name: String,
-    pub r#type: String,
-    pub proxied: Option<bool>,
-    pub comment: Option<String>,
-    pub tags: Option<Vec<String>>,
-    pub ttl: Option<usize>,
-}
+// #[derive(Clone, Serialize, Deserialize, Debug)]
+// pub struct Cloudflare {
+//     pub email: String,
+//     pub zone_id: String,
+//     pub dns_record_id: String,
+//     pub api_token: String,
+//     pub name: String,
+//     pub r#type: String,
+//     pub proxied: Option<bool>,
+//     pub comment: Option<String>,
+//     pub tags: Option<Vec<String>>,
+//     pub ttl: Option<usize>,
+// }
 
 pub type CloudflareDomains = Vec<Cloudflare>;
 

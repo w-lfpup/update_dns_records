@@ -3,9 +3,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use tokio::fs;
 
-use crate::requests::ResponseJson;
-
-pub type IpServices = Vec<(String, String)>;
+use crate::toolkit::requests::ResponseJson;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct IpServiceResult {
