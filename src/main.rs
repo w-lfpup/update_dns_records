@@ -2,7 +2,7 @@ use std::{env, path};
 
 mod toolkit;
 
-use crate::toolkit::config;
+use crate::toolkit::{config, results};
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
@@ -19,7 +19,7 @@ async fn main() -> Result<(), String> {
     };
 
     // "copy" results from disk
-    // let prev_results = results::read_results_from_disk(&config.results_filepath).await;
+    let prev_results = results::read_results_from_disk(&config.results_filepath).await;
 
     // // update results
     // let ip_service_result =
