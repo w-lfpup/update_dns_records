@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use tokio::fs;
 
+use crate::toolkit::config::Config;
 use crate::toolkit::requests::ResponseJson;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -64,8 +65,8 @@ impl UpdateIpResults {
     }
 }
 
-pub async fn read_results_from_disk(results_filepath: &PathBuf) -> Result<UpdateIpResults, String> {
-    let json_as_str = match fs::read_to_string(&results_filepath).await {
+pub async fn read_results_from_disk(config: &Config) -> Result<UpdateIpResults, String> {
+    let json_as_str = match fs::read_to_string(&config.results_filepath).await {
         Ok(json_str) => json_str,
         Err(e) => return Err(e.to_string()),
     };

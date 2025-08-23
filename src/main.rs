@@ -20,7 +20,7 @@ async fn main() -> Result<(), String> {
     };
 
     // "copy" results from disk
-    let prev_results = results::read_results_from_disk(&config.results_filepath).await;
+    let prev_results = results::read_results_from_disk(&config).await;
 
     // // update results
     let ip_service_result = ip_services::fetch_service_results(&config, &prev_results).await;
