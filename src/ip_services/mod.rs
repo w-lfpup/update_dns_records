@@ -1,12 +1,13 @@
 use rand::{thread_rng, Rng};
 
+use crate::toolkit::config::Config;
 use crate::toolkit::ip_services::IpServices;
 use crate::toolkit::results::{IpServiceResult, UpdateIpResults};
 
 mod address_as_body;
 
 pub async fn fetch_service_results(
-    ip_services: &IpServices,
+    config: &Config,
     prev_results: &Result<UpdateIpResults, String>,
 ) -> Result<IpServiceResult, String> {
     let service = match prev_results {
@@ -14,7 +15,7 @@ pub async fn fetch_service_results(
         _ => "previous-results-do-not-exist",
     };
 
-    let (ip_service, response_type) = match get_random_ip_service(ip_services, service) {
+    let (ip_service, response_type) = match get_random_ip_service(&config.ip_services, service) {
         Some(r) => r,
         _ => return Err("failed to find ip service".to_string()),
     };
