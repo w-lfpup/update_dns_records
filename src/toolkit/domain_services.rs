@@ -24,4 +24,3 @@ pub struct Dyndns2 {
     pub username: String,
     pub password: String,
 }
-
