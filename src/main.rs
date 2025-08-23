@@ -1,5 +1,6 @@
 use std::{env, path};
 
+mod ip_services;
 mod toolkit;
 
 use crate::toolkit::{config, results};
@@ -22,8 +23,8 @@ async fn main() -> Result<(), String> {
     let prev_results = results::read_results_from_disk(&config.results_filepath).await;
 
     // // update results
-    // let ip_service_result =
-    //     ip_services::fetch_service_results(&config.ip_services, &prev_results).await;
+    let ip_service_result =
+        ip_services::fetch_service_results(&config.ip_services, &prev_results).await;
 
     // let domain_service_results =
     //     domain_services::update_domains(&config, &prev_results, &ip_service_result).await;

@@ -1,15 +1,9 @@
 use rand::{thread_rng, Rng};
 
-use results::{IpServiceResult, UpdateIpResults};
+use crate::toolkit::ip_services::IpServices;
+use crate::toolkit::results::{IpServiceResult, UpdateIpResults};
 
 mod address_as_body;
-
-// Save response in results
-// Signal ip has changed somehow
-
-// ip services are accounted for by response type
-// beware of potential hydra
-// pub type IpServices = Vec<(String, String)>;
 
 pub async fn fetch_service_results(
     ip_services: &IpServices,

@@ -1,8 +1,9 @@
 use bytes::Bytes;
 use http_body_util::Full;
 use hyper::Request;
-use requests::{get_host_and_authority, request_http1_tls_response};
 use std::net;
+
+use crate::toolkit::requests::{get_host_and_authority, request_http1_tls_response};
 
 // request with empty body returns response body with IP Address
 pub async fn request_address_as_response_body(service: &str) -> Result<String, String> {
