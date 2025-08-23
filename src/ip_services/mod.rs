@@ -20,14 +20,25 @@ pub async fn fetch_service_results(
         _ => return Err("failed to find ip service".to_string()),
     };
 
-    let address = match response_type {
+    let response_json_results = match response_type {
         // there could be json responses
-        _ => address_as_body::request_address_as_response_body(&ip_service).await,
+        _ => address_as_body::request_address_as_body(&ip_service).await,
     };
 
-    match address {
+    let response_json = match response_json_results {
+        Ok(res_json) => res_json,
+        Err(e) => return Err(e),
+    };
+
+    let ip_address = match response_type {
+        // there could be json responses
+        _ => address_as_body::get_ip_address_from_body(&response_json).await,
+    };
+
+    match ip_address {
         Ok(addr) => {
             let mut ip_struct = IpServiceResult::new(&ip_service);
+            ip_struct.response = Some(response_json);
             ip_struct.ip_address = Some(addr);
             Ok(ip_struct)
         }

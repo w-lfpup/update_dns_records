@@ -3,28 +3,29 @@ use http_body_util::Full;
 use hyper::Request;
 use std::net;
 
-use crate::toolkit::requests::{get_host_and_authority, request_http1_tls_response};
+use crate::toolkit::requests::{get_host_and_authority, request_http1_tls_response, ResponseJson};
 
-// request with empty body returns response body with IP Address
-pub async fn request_address_as_response_body(service: &str) -> Result<String, String> {
+pub async fn request_address_as_body(service: &str) -> Result<ResponseJson, String> {
     let request = match create_request_with_empty_body(service) {
         Ok(req) => req,
         Err(e) => return Err(e),
     };
 
-    let response = match request_http1_tls_response(request).await {
-        Ok(res) => res,
+    match request_http1_tls_response(request).await {
+        Ok(res) => Ok(res),
         Err(e) => return Err(e),
-    };
+    }
+}
 
-    if response.status_code != 200 {
-        return Err("response was not okay".to_string());
+pub async fn get_ip_address_from_body(response_json: &ResponseJson) -> Result<String, String> {
+    if response_json.status_code != 200 {
+        return Err("response_json was not okay".to_string());
     }
 
     // set address if request is successful
-    let ip_address = match response.body.trim().parse::<net::IpAddr>() {
+    let ip_address = match response_json.body.trim().parse::<net::IpAddr>() {
         Ok(ip) => ip.to_string(),
-        _ => return Err("ip address could not be parsed from response".to_string()),
+        _ => return Err("ip address could not be parsed from response_json".to_string()),
     };
 
     Ok(ip_address)
