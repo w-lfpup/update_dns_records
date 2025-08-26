@@ -69,14 +69,12 @@ async fn build_domain_result(domain: &Dyndns2, ip_address: &str) -> DomainResult
         }
     };
 
-    // update domain service
-    // create json-able struct from response
-    // add to domain result
     match request_http1_tls_response(request).await {
         Ok(r) => {
             if verify_resposne(&r) {
                 domain_result.ip_address = Some(ip_address.to_string());
             }
+            domain_result.response = Some(r);
         }
         Err(e) => domain_result.errors.push(e),
     }
@@ -85,8 +83,17 @@ async fn build_domain_result(domain: &Dyndns2, ip_address: &str) -> DomainResult
 }
 
 fn verify_resposne(res: &ResponseJson) -> bool {
-    res.status_code >= 200 && res.status_code < 300
-    // if body starts with nchg | good
+    if res.status_code < 200 || res.status_code >= 300 {
+        return false
+    }
+
+    let body_trimmed = res.body.trim();
+
+    if body_trimmed.starts_with("good") || body_trimmed.starts_with("nchg") {
+        return true;
+    }
+
+    false
 }
 
 fn get_https_dyndns2_req(domain: &Dyndns2, ip_addr: &str) -> Result<Request<Full<Bytes>>, String> {
