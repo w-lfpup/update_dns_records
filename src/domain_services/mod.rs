@@ -22,22 +22,10 @@ pub async fn update_domains(
 
     // add more services here
     #[cfg(feature = "dyndns2")]
-    dyndns2::update_domains(
-        &mut domain_results,
-        prev_results,
-        &ip_address,
-        &config.domain_services.dyndns2,
-    )
-    .await;
+    dyndns2::update_domains(config, prev_results, &mut domain_results, &ip_address).await;
 
     #[cfg(feature = "cloudflare")]
-    cloudflare::update_domains(
-        &mut domain_results,
-        prev_results,
-        &ip_address,
-        &config.domain_services.cloudflare,
-    )
-    .await;
+    cloudflare::update_domains(config, prev_results, &mut domain_results, &ip_address).await;
 
     Ok(domain_results)
 }

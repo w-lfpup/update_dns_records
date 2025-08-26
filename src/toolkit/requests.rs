@@ -7,7 +7,6 @@ use hyper_util::rt::TokioIo;
 use native_tls::TlsConnector;
 use serde::{Deserialize, Serialize};
 use std::io;
-use std::time::SystemTime;
 use tokio::net::TcpStream;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]

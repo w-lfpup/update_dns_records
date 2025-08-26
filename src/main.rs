@@ -27,9 +27,7 @@ async fn main() -> Result<(), String> {
     let domain_service_results =
         domain_services::update_domains(&config, &prev_results, &ip_service_result).await;
 
-    // let results = results::UpdateIpResults::try_from(ip_service_result, domain_service_results);
+    let results = results::UpdateIpResults::try_from(ip_service_result, domain_service_results);
 
-    // results::write_results_to_disk(results, &config.results_filepath).await
-
-    Ok(())
+    results::write_results_to_disk(results, &config.results_filepath).await
 }

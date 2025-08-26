@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use crate::toolkit::config::Config;
 use crate::toolkit::domain_services::cloudflare::Cloudflare;
 use crate::toolkit::requests::{request_http1_tls_response, ResponseJson};
-use crate::toolkit::results::{DomainResult, IpServiceResult, UpdateIpResults};
+use crate::toolkit::results::{DomainResult, UpdateIpResults};
 
 #[derive(Clone, Serialize, Debug)]
 pub struct CloudflareRequestBody {
@@ -24,7 +24,7 @@ pub struct CloudflareRequestBody {
     pub ttl: Option<usize>,
 }
 
-#[derive(Clone, Serialize, Debug)]
+#[derive(Clone, Deserialize, Serialize, Debug)]
 pub struct CloudflareMinimalResponseBody {
     pub success: bool,
 }
@@ -37,12 +37,12 @@ Only update changed parameters
 */
 
 pub async fn update_domains(
-    domain_results: &mut HashMap<String, DomainResult>,
+    config: &Config,
     prev_results: &Result<UpdateIpResults, String>,
+    domain_results: &mut HashMap<String, DomainResult>,
     ip_address: &str,
-    optional_domains: &Option<Vec<Cloudflare>>,
 ) {
-    let domains = match optional_domains {
+    let domains = match &config.domain_services.cloudflare {
         Some(domains) => domains,
         _ => return,
     };
