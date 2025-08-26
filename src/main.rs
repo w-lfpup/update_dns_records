@@ -1,5 +1,6 @@
 use std::{env, path};
 
+mod domain_services;
 mod ip_services;
 mod toolkit;
 
@@ -23,8 +24,8 @@ async fn main() -> Result<(), String> {
 
     let ip_service_result = ip_services::fetch_service_results(&config, &prev_results).await;
 
-    // let domain_service_results =
-    //     domain_services::update_domains(&config, &prev_results, &ip_service_result).await;
+    let domain_service_results =
+        domain_services::update_domains(&config, &prev_results, &ip_service_result).await;
 
     // let results = results::UpdateIpResults::try_from(ip_service_result, domain_service_results);
 

@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
-use config::Config;
-use results::{DomainResult, IpServiceResult, UpdateIpResults};
+use crate::toolkit::config::Config;
+use crate::toolkit::results::{DomainResult, IpServiceResult, UpdateIpResults};
 
 #[cfg(feature = "cloudflare")]
-use cloudflare;
+mod cloudflare;
 #[cfg(feature = "dyndns2")]
-use dyndns2;
+mod dyndns2;
 
 pub async fn update_domains(
     config: &Config,
@@ -26,7 +26,7 @@ pub async fn update_domains(
         &mut domain_results,
         prev_results,
         &ip_address,
-        &config.dyndns2,
+        &config.domain_services.dyndns2,
     )
     .await;
 
@@ -35,7 +35,7 @@ pub async fn update_domains(
         &mut domain_results,
         prev_results,
         &ip_address,
-        &config.cloudflare,
+        &config.domain_services.cloudflare,
     )
     .await;
 

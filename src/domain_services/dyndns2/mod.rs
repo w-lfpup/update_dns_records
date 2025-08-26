@@ -1,12 +1,3 @@
-use base64::{engine::general_purpose, Engine as _};
-use bytes::Bytes;
-use http_body_util::Full;
-use hyper::Request;
-use requests::{request_http1_tls_response, ResponseJson};
-use results::{DomainResult, UpdateIpResults};
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-
 /*
     Implements a subset of the dyndns2 protocol.
     https://help.dyn.com/remote-access-api/perform-update/
@@ -15,6 +6,18 @@ use std::collections::HashMap;
     Not all responses are implemented but all responses are recorded.
     Only the 911 response body warrants a retry
 */
+
+use base64::{engine::general_purpose, Engine as _};
+use bytes::Bytes;
+use http_body_util::Full;
+use hyper::Request;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+use crate::toolkit::config::Config;
+use crate::toolkit::domain_services::dyndns2::Dyndns2;
+use crate::toolkit::requests::{request_http1_tls_response, ResponseJson};
+use crate::toolkit::results::{DomainResult, IpServiceResult, UpdateIpResults};
 
 const CLIENT_HEADER_VALUE: &str = "hyper/1.0 rust-client";
 

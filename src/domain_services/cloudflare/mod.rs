@@ -1,31 +1,13 @@
-use serde::{Deserialize, Serialize};
-
 use bytes::Bytes;
 use http_body_util::Full;
 use hyper::Request;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use requests::{request_http1_tls_response, ResponseJson};
-use results::{DomainResult, UpdateIpResults};
-
-// following types are based on:
-// https://developers.cloudflare.com/api/operations/dns-records-for-a-zone-update-dns-record
-
-// #[derive(Clone, Serialize, Deserialize, Debug)]
-// pub struct Cloudflare {
-//     pub email: String,
-//     pub zone_id: String,
-//     pub dns_record_id: String,
-//     pub api_token: String,
-//     pub name: String,
-//     pub r#type: String,
-//     pub proxied: Option<bool>,
-//     pub comment: Option<String>,
-//     pub tags: Option<Vec<String>>,
-//     pub ttl: Option<usize>,
-// }
-
-pub type CloudflareDomains = Vec<Cloudflare>;
+use crate::toolkit::config::Config;
+use crate::toolkit::domain_services::cloudflare::Cloudflare;
+use crate::toolkit::requests::{request_http1_tls_response, ResponseJson};
+use crate::toolkit::results::{DomainResult, IpServiceResult, UpdateIpResults};
 
 #[derive(Clone, Serialize, Debug)]
 pub struct CloudflareRequestBody {
@@ -44,7 +26,7 @@ pub struct CloudflareRequestBody {
 
 #[derive(Clone, Serialize, Debug)]
 pub struct CloudflareMinimalResponseBody {
-    pub success: bool;
+    pub success: bool,
 }
 
 /*
@@ -58,7 +40,7 @@ pub async fn update_domains(
     domain_results: &mut HashMap<String, DomainResult>,
     prev_results: &Result<UpdateIpResults, String>,
     ip_address: &str,
-    optional_domains: &Option<CloudflareDomains>,
+    optional_domains: &Option<Vec<Cloudflare>>,
 ) {
     let domains = match optional_domains {
         Some(domains) => domains,
