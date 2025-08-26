@@ -1,13 +1,3 @@
-use base64::{engine::general_purpose, Engine as _};
-use bytes::Bytes;
-use http::Request;
-use http_body_util::Empty;
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-
-use requests;
-use results::{DomainResult, ResponseJson, UpdateIpResults};
-
 /*
     Implements a subset of the dyndns2 protocol.
     https://help.dyn.com/remote-access-api/perform-update/
@@ -17,33 +7,34 @@ use results::{DomainResult, ResponseJson, UpdateIpResults};
     Only the 911 response body warrants a retry
 */
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct Dyndns2 {
-    pub service_uri: String,
-    pub hostname: String,
-    pub username: String,
-    pub password: String,
-}
+use base64::{engine::general_purpose, Engine as _};
+use bytes::Bytes;
+use http_body_util::Full;
+use hyper::Request;
+use std::collections::HashMap;
 
-pub type Dyndns2Domains = Vec<Dyndns2>;
+use crate::toolkit::config::Config;
+use crate::toolkit::domain_services::dyndns2::Dyndns2;
+use crate::toolkit::requests::{request_http1_tls_response, ResponseJson};
+use crate::toolkit::results::{DomainResult, UpdateIpResults};
 
 const CLIENT_HEADER_VALUE: &str = "hyper/1.0 rust-client";
 
 // must return results
 pub async fn update_domains(
+    config: &Config,
+    prev_results: &Result<UpdateIpResults, String>,
     domain_results: &mut HashMap<String, DomainResult>,
-    prev_results: &Option<UpdateIpResults>,
     ip_address: &str,
-    optional_domains: &Option<Dyndns2Domains>,
 ) {
-    let domains = match optional_domains {
+    let domains = match &config.domain_services.dyndns2 {
         Some(domains) => domains,
         _ => return,
     };
 
     for domain in domains {
         let domain_result = match prev_results {
-            Some(results) => match results.domain_service_results.get(&domain.hostname) {
+            Ok(results) => match results.domain_service_results.get(&domain.hostname) {
                 Some(domain) => domain.clone(),
                 _ => DomainResult::new(&domain.hostname),
             },
@@ -59,10 +50,7 @@ pub async fn update_domains(
             }
         }
 
-        // build domain result
         let domain_result = build_domain_result(&domain, ip_address).await;
-
-        // write over previous entry
         domain_results.insert(hostname, domain_result);
     }
 }
@@ -78,28 +66,39 @@ async fn build_domain_result(domain: &Dyndns2, ip_address: &str) -> DomainResult
         }
     };
 
-    // update domain service
-    // create json-able struct from response
-    // add to domain result
-    match requests::request_http1_tls_response(request).await {
-        Ok(r) => {
-            if verify_resposne(&r) {
-                domain_result.ip_address = Some(ip_address.to_string());
-            }
+    let response = match request_http1_tls_response(request).await {
+        Ok(r) => r,
+        Err(e) => {
+            domain_result.errors.push(e);
+            return domain_result;
         }
-        Err(e) => domain_result.errors.push(e),
+    };
+
+    if verify_resposne(&response) {
+        domain_result.ip_address = Some(ip_address.to_string());
     }
 
+    domain_result.response = Some(response);
     domain_result
 }
 
 fn verify_resposne(res: &ResponseJson) -> bool {
-    res.status_code >= 200 && res.status_code < 300
+    if res.status_code < 200 || res.status_code >= 300 {
+        return false;
+    }
+
+    let body_trimmed = res.body.trim();
+
+    if body_trimmed.starts_with("good") || body_trimmed.starts_with("nchg") {
+        return true;
+    }
+
+    false
 }
 
-fn get_https_dyndns2_req(domain: &Dyndns2, ip_addr: &str) -> Result<Request<Empty<Bytes>>, String> {
+fn get_https_dyndns2_req(domain: &Dyndns2, ip_addr: &str) -> Result<Request<Full<Bytes>>, String> {
     let uri_str = domain.service_uri.clone() + "?hostname=" + &domain.hostname + "&myip=" + ip_addr;
-    let uri = match uri_str.parse::<http::Uri>() {
+    let uri = match uri_str.parse::<hyper::Uri>() {
         Ok(u) => u,
         Err(e) => return Err(e.to_string()),
     };
@@ -117,7 +116,7 @@ fn get_https_dyndns2_req(domain: &Dyndns2, ip_addr: &str) -> Result<Request<Empt
         .header(hyper::header::HOST, host)
         .header(hyper::header::USER_AGENT, CLIENT_HEADER_VALUE)
         .header(hyper::header::AUTHORIZATION, auth_value)
-        .body(Empty::<Bytes>::new())
+        .body(Full::new(bytes::Bytes::new()))
     {
         Ok(req) => Ok(req),
         Err(e) => Err(e.to_string()),

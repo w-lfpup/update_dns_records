@@ -1,31 +1,13 @@
-use serde::{Deserialize, Serialize};
-
 use bytes::Bytes;
-use http::Request;
 use http_body_util::Full;
+use hyper::Request;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use requests;
-use results::{DomainResult, ResponseJson, UpdateIpResults};
-
-// following types are based on:
-// https://developers.cloudflare.com/api/operations/dns-records-for-a-zone-update-dns-record
-
-#[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct Cloudflare {
-    pub email: String,
-    pub zone_id: String,
-    pub dns_record_id: String,
-    pub api_token: String,
-    pub name: String,
-    pub r#type: String,
-    pub proxied: Option<bool>,
-    pub comment: Option<String>,
-    pub tags: Option<Vec<String>>,
-    pub ttl: Option<usize>,
-}
-
-pub type CloudflareDomains = Vec<Cloudflare>;
+use crate::toolkit::config::Config;
+use crate::toolkit::domain_services::cloudflare::Cloudflare;
+use crate::toolkit::requests::{request_http1_tls_response, ResponseJson};
+use crate::toolkit::results::{DomainResult, UpdateIpResults};
 
 #[derive(Clone, Serialize, Debug)]
 pub struct CloudflareRequestBody {
@@ -42,6 +24,11 @@ pub struct CloudflareRequestBody {
     pub ttl: Option<usize>,
 }
 
+#[derive(Clone, Deserialize, Serialize, Debug)]
+pub struct CloudflareMinimalResponseBody {
+    pub success: bool,
+}
+
 /*
 https://developers.cloudflare.com/api/operations/dns-records-for-a-zone-patch-dns-record
 
@@ -50,19 +37,19 @@ Only update changed parameters
 */
 
 pub async fn update_domains(
+    config: &Config,
+    prev_results: &Result<UpdateIpResults, String>,
     domain_results: &mut HashMap<String, DomainResult>,
-    prev_results: &Option<UpdateIpResults>,
     ip_address: &str,
-    optional_domains: &Option<CloudflareDomains>,
 ) {
-    let domains = match optional_domains {
+    let domains = match &config.domain_services.cloudflare {
         Some(domains) => domains,
         _ => return,
     };
 
     for domain in domains {
         let mut domain_result = match prev_results {
-            Some(results) => match results.domain_service_results.get(&domain.name) {
+            Ok(results) => match results.domain_service_results.get(&domain.name) {
                 Some(domain) => domain.clone(),
                 _ => DomainResult::new(&domain.name),
             },
@@ -96,23 +83,32 @@ async fn build_domain_result(domain: &Cloudflare, ip_address: &str) -> DomainRes
         }
     };
 
-    // update domain service
-    // create json-able struct from response
-    // add to domain result
-    match requests::boxed_request_http1_tls_response(request).await {
-        Ok(r) => {
-            if verify_resposne(&r) {
-                domain_result.ip_address = Some(ip_address.to_string());
-            }
+    let response = match request_http1_tls_response(request).await {
+        Ok(r) => r,
+        Err(e) => {
+            domain_result.errors.push(e);
+            return domain_result;
         }
-        Err(e) => domain_result.errors.push(e),
+    };
+
+    if verify_resposne(&response) {
+        domain_result.ip_address = Some(ip_address.to_string());
     }
 
+    domain_result.response = Some(response);
     domain_result
 }
 
 fn verify_resposne(res: &ResponseJson) -> bool {
-    res.status_code >= 200 && res.status_code < 300
+    if res.status_code != 200 {
+        return false;
+    }
+
+    if let Ok(res_json) = serde_json::from_str::<CloudflareMinimalResponseBody>(&res.body) {
+        return res_json.success;
+    };
+
+    false
 }
 
 fn get_cloudflare_req(domain: &Cloudflare, ip_addr: &str) -> Result<Request<Full<Bytes>>, String> {

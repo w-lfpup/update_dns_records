@@ -4,10 +4,12 @@
 		["https://checkip.amazonaws.com/", "address_as_body"],
 		["https://api.ipify.org", "address_as_body"]
 	],
-	"dyndns2": [{
-			"service_uri": "https://domains.google.com/nic/update",
-			"hostname": "something.com",
-			"username": "...",
-			"password": "..."
-	}]
+	"domain_services": {
+		"dyndns2": [{
+				"service_uri": "https://domains.google.com/nic/update",
+				"hostname": "something.com",
+				"username": "...",
+				"password": "..."
+		}]
+	}
 }

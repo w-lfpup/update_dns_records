@@ -1,35 +1,44 @@
 use rand::{thread_rng, Rng};
 
-use results::{IpServiceResult, UpdateIpResults};
+use crate::toolkit::config::Config;
+use crate::toolkit::ip_services::IpServices;
+use crate::toolkit::results::{IpServiceResult, UpdateIpResults};
 
 mod address_as_body;
 
-// ip services are accounted for by response type
-// beware of potential hydra
-pub type IpServices = Vec<(String, String)>;
-
-pub async fn get_ip_service_results(
-    ip_services: &IpServices,
-    prev_results: &Option<UpdateIpResults>,
+pub async fn fetch_service_results(
+    config: &Config,
+    prev_results: &Result<UpdateIpResults, String>,
 ) -> Result<IpServiceResult, String> {
     let service = match prev_results {
-        Some(results) => &results.ip_service_result.service,
-        None => "previous-results-do-not-exist",
+        Ok(results) => &results.ip_service_result.service,
+        _ => "previous-results-do-not-exist",
     };
 
-    let (ip_service, response_type) = match get_random_ip_service(ip_services, service) {
+    let (ip_service, response_type) = match get_random_ip_service(&config.ip_services, service) {
         Some(r) => r,
         _ => return Err("failed to find ip service".to_string()),
     };
 
-    let address = match response_type {
+    let response_json_results = match response_type {
         // there could be json responses
-        _ => address_as_body::request_address_as_response_body(&ip_service).await,
+        _ => address_as_body::request_address_as_body(&ip_service).await,
     };
 
-    match address {
+    let response_json = match response_json_results {
+        Ok(res_json) => res_json,
+        Err(e) => return Err(e),
+    };
+
+    let ip_address = match response_type {
+        // there could be json responses
+        _ => address_as_body::get_ip_address_from_body(&response_json).await,
+    };
+
+    match ip_address {
         Ok(addr) => {
             let mut ip_struct = IpServiceResult::new(&ip_service);
+            ip_struct.response = Some(response_json);
             ip_struct.ip_address = Some(addr);
             Ok(ip_struct)
         }
