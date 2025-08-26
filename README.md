@@ -8,9 +8,26 @@ The following sections describe how to install and run `update_dns_records`.
 
 ### Install
 
-All available services are included by default. Rust features are directly correlated to dns services.
+Run the following shell commands:
 
-For now, all minimal or custom builds need to use `--features` flags.
+```sh
+git clone https://github.com/w-lfpup/update_dns_records
+cargo install --path update_dns_records
+```
+
+All services are directly related to features.
+
+All features (and therefore all services) are included by default.
+
+#### Minimal installs
+
+Minimal installations should use the `--features` flag.
+
+For example, the following script will install `update_dns_records` but only support dyndns2:
+
+```sh
+cargo install --path update_dns_records --features dyndns2
+```
 
 ### Configuration
 
@@ -60,12 +77,14 @@ Use the following schema to add `dyndns2` domains to the `config`.
 
 ```JSON
 {
-	"dyndns2": [{
-		"service_uri": "string",
-		"hostname": "string",
-		"username": "string",
-		"password": "string"
-	}]
+	"domain_services": {
+		"dyndns2": [{
+			"service_uri": "string",
+			"hostname": "string",
+			"username": "string",
+			"password": "string"
+		}]
+	}
 }
 ```
 
@@ -84,18 +103,20 @@ Use the following schema to add `cloudflare` domains to the `config`.
 
 ```JSON
 {
-	"cloudflare": [{
-		"name": "yourdomain.com",
-		"email": "string",
-		"zone_id": "string",
-		"dns_record_id": "string",
-		"api_token": "string",
-		"type": "string, record type ie: A",
-		"proxied": "bool | null",
-		"comment": "string | null",
-		"tags": "[]string | null",
-		"ttl": "number | null",
-	}]
+	"domain_services": {
+		"cloudflare": [{
+			"name": "yourdomain.com",
+			"email": "string",
+			"zone_id": "string",
+			"dns_record_id": "string",
+			"api_token": "string",
+			"type": "string, record type ie: A",
+			"proxied": "bool | null",
+			"comment": "string | null",
+			"tags": "[]string | null",
+			"ttl": "number | null",
+		}]
+	}
 }
 ```
 
