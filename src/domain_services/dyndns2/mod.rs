@@ -50,10 +50,7 @@ pub async fn update_domains(
             }
         }
 
-        // build domain result
         let domain_result = build_domain_result(&domain, ip_address).await;
-
-        // write over previous entry
         domain_results.insert(hostname, domain_result);
     }
 }
@@ -69,22 +66,25 @@ async fn build_domain_result(domain: &Dyndns2, ip_address: &str) -> DomainResult
         }
     };
 
-    match request_http1_tls_response(request).await {
-        Ok(r) => {
-            if verify_resposne(&r) {
-                domain_result.ip_address = Some(ip_address.to_string());
-            }
-            domain_result.response = Some(r);
+    let response = match request_http1_tls_response(request).await {
+        Ok(r) => r,
+        Err(e) => {
+            domain_result.errors.push(e);
+            return domain_result;
         }
-        Err(e) => domain_result.errors.push(e),
-    }
+    };
 
+    if verify_resposne(&response) {
+        domain_result.ip_address = Some(ip_address.to_string());
+    }
+    
+    domain_result.response = Some(response);
     domain_result
 }
 
 fn verify_resposne(res: &ResponseJson) -> bool {
     if res.status_code < 200 || res.status_code >= 300 {
-        return false
+        return false;
     }
 
     let body_trimmed = res.body.trim();

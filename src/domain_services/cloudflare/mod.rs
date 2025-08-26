@@ -83,24 +83,32 @@ async fn build_domain_result(domain: &Cloudflare, ip_address: &str) -> DomainRes
         }
     };
 
-    // update domain service
-    // create json-able struct from response
-    // add to domain result
-    match request_http1_tls_response(request).await {
-        Ok(r) => {
-            if verify_resposne(&r) {
-                domain_result.ip_address = Some(ip_address.to_string());
-            }
+    let response = match request_http1_tls_response(request).await {
+        Ok(r) => r,
+        Err(e) => {
+            domain_result.errors.push(e);
+            return domain_result;
         }
-        Err(e) => domain_result.errors.push(e),
+    };
+
+    if verify_resposne(&response) {
+        domain_result.ip_address = Some(ip_address.to_string());
     }
 
+    domain_result.response = Some(response);
     domain_result
 }
 
 fn verify_resposne(res: &ResponseJson) -> bool {
-    res.status_code >= 200 && res.status_code < 300
-    // minimum response { success: true | false }
+    if res.status_code < 200 && res.status_code >= 300 {
+        return false;
+    }
+
+    if let Ok(res_json) = serde_json::from_str::<CloudflareMinimalResponseBody>(&res.body) {
+        return res_json.success;
+    };
+
+    false
 }
 
 fn get_cloudflare_req(domain: &Cloudflare, ip_addr: &str) -> Result<Request<Full<Bytes>>, String> {
