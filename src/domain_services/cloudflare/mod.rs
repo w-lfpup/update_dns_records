@@ -42,6 +42,11 @@ pub struct CloudflareRequestBody {
     pub ttl: Option<usize>,
 }
 
+#[derive(Clone, Serialize, Debug)]
+pub struct CloudflareMinimalResponseBody {
+    pub success: bool;
+}
+
 /*
 https://developers.cloudflare.com/api/operations/dns-records-for-a-zone-patch-dns-record
 

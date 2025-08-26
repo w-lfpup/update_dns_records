@@ -3,24 +3,14 @@ use serde_json;
 use std::path;
 use tokio::fs;
 
+use crate::toolkit::domain_services::DomainServices;
 use crate::toolkit::ip_services::IpServices;
 
-// ddns services
-#[cfg(feature = "cloudflare")]
-use crate::toolkit::domain_services::Cloudflare;
-#[cfg(feature = "dyndns2")]
-use crate::toolkit::domain_services::Dyndns2;
-
-// add domain services here
-// beware of hydra
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Config {
     pub results_filepath: path::PathBuf,
     pub ip_services: IpServices,
-    #[cfg(feature = "dyndns2")]
-    pub dyndns2: Option<Vec<Dyndns2>>,
-    #[cfg(feature = "cloudflare")]
-    pub cloudflare: Option<Vec<Cloudflare>>,
+    pub domain_services: DomainServices,
 }
 
 pub async fn from_path(file_path: &path::Path) -> Result<Config, String> {

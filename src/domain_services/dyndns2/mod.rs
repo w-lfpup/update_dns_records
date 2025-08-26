@@ -16,16 +16,6 @@ use std::collections::HashMap;
     Only the 911 response body warrants a retry
 */
 
-// #[derive(Clone, Serialize, Deserialize, Debug)]
-// pub struct Dyndns2 {
-//     pub service_uri: String,
-//     pub hostname: String,
-//     pub username: String,
-//     pub password: String,
-// }
-
-pub type Dyndns2Domains = Vec<Dyndns2>;
-
 const CLIENT_HEADER_VALUE: &str = "hyper/1.0 rust-client";
 
 // must return results
@@ -33,7 +23,7 @@ pub async fn update_domains(
     domain_results: &mut HashMap<String, DomainResult>,
     prev_results: &Result<UpdateIpResults, String>,
     ip_address: &str,
-    optional_domains: &Option<Dyndns2Domains>,
+    optional_domains: &Option<Vec<Dyndns2>>,
 ) {
     let domains = match optional_domains {
         Some(domains) => domains,
