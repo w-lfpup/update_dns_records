@@ -100,7 +100,7 @@ async fn build_domain_result(domain: &Cloudflare, ip_address: &str) -> DomainRes
 }
 
 fn verify_resposne(res: &ResponseJson) -> bool {
-    if res.status_code < 200 && res.status_code >= 300 {
+    if res.status_code != 200 {
         return false;
     }
 
