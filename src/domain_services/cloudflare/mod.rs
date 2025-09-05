@@ -1,3 +1,10 @@
+/*
+https://developers.cloudflare.com/api/operations/dns-records-for-a-zone-patch-dns-record
+
+PATCH Request
+Only update changed parameters
+*/
+
 use bytes::Bytes;
 use http_body_util::Full;
 use hyper::Request;
@@ -28,13 +35,6 @@ pub struct CloudflareRequestBody {
 pub struct CloudflareMinimalResponseBody {
     pub success: bool,
 }
-
-/*
-https://developers.cloudflare.com/api/operations/dns-records-for-a-zone-patch-dns-record
-
-PATCH Request
-Only update changed parameters
-*/
 
 pub async fn update_domains(
     config: &Config,

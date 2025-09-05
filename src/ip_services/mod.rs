@@ -30,8 +30,8 @@ pub async fn fetch_service_results(
         Err(e) => return Err(e),
     };
 
+    // there could be json responses
     let ip_address = match response_type {
-        // there could be json responses
         _ => address_as_body::get_ip_address_from_body(&response_json).await,
     };
 

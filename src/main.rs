@@ -30,10 +30,5 @@ async fn main() -> Result<(), String> {
     let domain_service_results =
         domain_services::update_domains(&config, &prev_results, &ip_service_result).await;
 
-    results::write_results_to_disk(
-        &config,
-        ip_service_result,
-        domain_service_results,
-    )
-    .await
+    results::write_results_to_disk(&config, ip_service_result, domain_service_results).await
 }

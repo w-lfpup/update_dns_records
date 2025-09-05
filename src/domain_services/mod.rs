@@ -20,7 +20,6 @@ pub async fn update_domains(
 
     let mut domain_results = HashMap::<String, DomainResult>::new();
 
-    // add more services here
     #[cfg(feature = "dyndns2")]
     dyndns2::update_domains(config, prev_results, &mut domain_results, &ip_address).await;
 

@@ -22,9 +22,6 @@ impl IpServiceResult {
     }
 }
 
-// DONT only SAVE errors. Save response.
-// If validated save save ip_address update and results
-
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct DomainResult {
     pub hostname: String,
