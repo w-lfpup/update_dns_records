@@ -53,12 +53,12 @@ pub struct UpdateIpResults {
 
 impl UpdateIpResults {
     pub fn try_from(
-        ip_service_result: Result<IpServiceResult, String>,
+        ip_service_result: IpServiceResult,
         domain_service_results: Result<HashMap<String, DomainResult>, String>,
     ) -> Result<UpdateIpResults, String> {
-        if let (Ok(ip_result), Ok(domain_results)) = (ip_service_result, domain_service_results) {
+        if let Ok(domain_results) = domain_service_results {
             return Ok(UpdateIpResults {
-                ip_service_result: ip_result,
+                ip_service_result: ip_service_result,
                 domain_service_results: domain_results,
             });
         }
