@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
 use tokio::fs;
 
 use crate::toolkit::config::Config;
@@ -80,7 +79,7 @@ pub async fn read_results_from_disk(config: &Config) -> Result<UpdateIpResults, 
 }
 
 pub async fn write_results_to_disk(
-    results_filepath: &PathBuf,
+    config: &Config,
     ip_service_result: IpServiceResult,
     domain_service_results: Result<HashMap<String, DomainResult>, String>,
 ) -> Result<(), String> {
@@ -94,7 +93,7 @@ pub async fn write_results_to_disk(
         Err(e) => return Err(e.to_string()),
     };
 
-    if let Err(e) = fs::write(&results_filepath, json_str).await {
+    if let Err(e) = fs::write(&config.results_filepath, json_str).await {
         return Err(e.to_string());
     };
 

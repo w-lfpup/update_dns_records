@@ -31,7 +31,7 @@ async fn main() -> Result<(), String> {
         domain_services::update_domains(&config, &prev_results, &ip_service_result).await;
 
     results::write_results_to_disk(
-        &config.results_filepath,
+        &config,
         ip_service_result,
         domain_service_results,
     )
