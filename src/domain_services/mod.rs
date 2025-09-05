@@ -11,7 +11,7 @@ mod dyndns2;
 pub async fn update_domains(
     config: &Config,
     prev_results: &Result<UpdateIpResults, String>,
-    ip_service_result: &Result<IpServiceResult, String>,
+    ip_service_result: &IpServiceResult,
 ) -> Result<HashMap<String, DomainResult>, String> {
     let ip_address = match get_ip_address(prev_results, ip_service_result) {
         Ok(ip) => ip,
@@ -20,7 +20,6 @@ pub async fn update_domains(
 
     let mut domain_results = HashMap::<String, DomainResult>::new();
 
-    // add more services here
     #[cfg(feature = "dyndns2")]
     dyndns2::update_domains(config, prev_results, &mut domain_results, &ip_address).await;
 
@@ -32,13 +31,12 @@ pub async fn update_domains(
 
 fn get_ip_address(
     prev_results: &Result<UpdateIpResults, String>,
-    ip_service_result: &Result<IpServiceResult, String>,
+    ip_service_result: &IpServiceResult,
 ) -> Result<String, String> {
-    if let Ok(ip_result) = ip_service_result {
-        if let Some(ip_addr) = &ip_result.ip_address {
-            return Ok(ip_addr.clone());
-        }
+    if let Some(ip_addr) = &ip_service_result.ip_address {
+        return Ok(ip_addr.clone());
     }
+
     if let Ok(prev_result) = prev_results {
         if let Some(ip_addr) = &prev_result.ip_service_result.ip_address {
             return Ok(ip_addr.clone());

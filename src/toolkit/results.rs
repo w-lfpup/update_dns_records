@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
 use tokio::fs;
 
 use crate::toolkit::config::Config;
@@ -22,9 +21,6 @@ impl IpServiceResult {
         }
     }
 }
-
-// DONT only SAVE errors. Save response.
-// If validated save save ip_address update and results
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct DomainResult {
@@ -53,12 +49,12 @@ pub struct UpdateIpResults {
 
 impl UpdateIpResults {
     pub fn try_from(
-        ip_service_result: Result<IpServiceResult, String>,
+        ip_service_result: IpServiceResult,
         domain_service_results: Result<HashMap<String, DomainResult>, String>,
     ) -> Result<UpdateIpResults, String> {
-        if let (Ok(ip_result), Ok(domain_results)) = (ip_service_result, domain_service_results) {
+        if let Ok(domain_results) = domain_service_results {
             return Ok(UpdateIpResults {
-                ip_service_result: ip_result,
+                ip_service_result: ip_service_result,
                 domain_service_results: domain_results,
             });
         }
@@ -80,10 +76,11 @@ pub async fn read_results_from_disk(config: &Config) -> Result<UpdateIpResults, 
 }
 
 pub async fn write_results_to_disk(
-    results: Result<UpdateIpResults, String>,
-    results_filepath: &PathBuf,
+    config: &Config,
+    ip_service_result: IpServiceResult,
+    domain_service_results: Result<HashMap<String, DomainResult>, String>,
 ) -> Result<(), String> {
-    let ready_results = match results {
+    let ready_results = match UpdateIpResults::try_from(ip_service_result, domain_service_results) {
         Ok(rs) => rs,
         Err(e) => return Err(e),
     };
@@ -93,7 +90,7 @@ pub async fn write_results_to_disk(
         Err(e) => return Err(e.to_string()),
     };
 
-    if let Err(e) = fs::write(&results_filepath, json_str).await {
+    if let Err(e) = fs::write(&config.results_filepath, json_str).await {
         return Err(e.to_string());
     };
 

@@ -22,12 +22,13 @@ async fn main() -> Result<(), String> {
 
     let prev_results = results::read_results_from_disk(&config).await;
 
-    let ip_service_result = ip_services::fetch_service_results(&config, &prev_results).await;
+    let ip_service_result = match ip_services::fetch_service_results(&config, &prev_results).await {
+        Ok(ip_result) => ip_result,
+        Err(e) => return Err(e),
+    };
 
     let domain_service_results =
         domain_services::update_domains(&config, &prev_results, &ip_service_result).await;
 
-    let results = results::UpdateIpResults::try_from(ip_service_result, domain_service_results);
-
-    results::write_results_to_disk(results, &config.results_filepath).await
+    results::write_results_to_disk(&config, ip_service_result, domain_service_results).await
 }
