@@ -80,10 +80,11 @@ pub async fn read_results_from_disk(config: &Config) -> Result<UpdateIpResults, 
 }
 
 pub async fn write_results_to_disk(
-    results: Result<UpdateIpResults, String>,
     results_filepath: &PathBuf,
+    ip_service_result: IpServiceResult,
+    domain_service_results: Result<HashMap<String, DomainResult>, String>,
 ) -> Result<(), String> {
-    let ready_results = match results {
+    let ready_results = match UpdateIpResults::try_from(ip_service_result, domain_service_results) {
         Ok(rs) => rs,
         Err(e) => return Err(e),
     };
