@@ -3,9 +3,9 @@ use http_body_util::Full;
 use hyper::Request;
 use std::net;
 
-use crate::requests::{get_host_and_authority, request_http1_tls_response, ResponseJson};
+use crate::requests::{get_host_and_authority, request_http1_tls_response, ResponseDetails};
 
-pub async fn request_address_as_body(service: &str) -> Result<ResponseJson, String> {
+pub async fn request_address_as_body(service: &str) -> Result<ResponseDetails, String> {
     let request = match create_request_with_empty_body(service) {
         Ok(req) => req,
         Err(e) => return Err(e),
@@ -17,7 +17,7 @@ pub async fn request_address_as_body(service: &str) -> Result<ResponseJson, Stri
     }
 }
 
-pub async fn get_ip_address_from_body(response_json: &ResponseJson) -> Result<String, String> {
+pub async fn get_ip_address_from_body(response_json: &ResponseDetails) -> Result<String, String> {
     if response_json.status_code != 200 {
         return Err("response_json was not okay".to_string());
     }

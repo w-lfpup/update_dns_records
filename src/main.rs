@@ -3,6 +3,7 @@ use std::{env, path};
 mod config;
 mod domain_services;
 mod ip_services;
+mod requests;
 mod results;
 
 #[tokio::main]
@@ -19,7 +20,7 @@ async fn main() -> Result<(), String> {
         Err(e) => return Err(e),
     };
 
-    let prev_results = results::read_results_from_disk(&config).await;
+    let prev_results = results::read_results_from_disk(&config.results_filepath).await;
 
     let ip_service_result =
         match ip_services::fetch_service_results(&config.ip_services, &prev_results).await {
@@ -31,5 +32,10 @@ async fn main() -> Result<(), String> {
         domain_services::update_domains(&config.domain_services, &prev_results, &ip_service_result)
             .await;
 
-    results::write_results_to_disk(&config, ip_service_result, domain_service_results).await
+    results::write_results_to_disk(
+        &config.results_filepath,
+        ip_service_result,
+        domain_service_results,
+    )
+    .await
 }

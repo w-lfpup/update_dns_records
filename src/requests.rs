@@ -10,12 +10,16 @@ use std::io;
 use tokio::net::TcpStream;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct ResponseJson {
+pub struct ResponseDetails {
     pub status_code: u16,
+    // content type
+    // content encoding
     pub body: String,
 }
 
-pub async fn request_http1_tls_response(req: Request<Full<Bytes>>) -> Result<ResponseJson, String> {
+pub async fn request_http1_tls_response(
+    req: Request<Full<Bytes>>,
+) -> Result<ResponseDetails, String> {
     let (host, authority) = match get_host_and_authority(&req.uri()) {
         Some(stream) => stream,
         _ => return Err("failed to get authority from uri".to_string()),
@@ -65,8 +69,6 @@ pub fn get_host_and_authority(uri: &Uri) -> Option<(&str, String)> {
     Some((host, authority))
 }
 
-// this has multiple "types" of errors
-// signal that it is an inappropriate grouping?
 async fn create_tls_stream(
     host: &str,
     addr: &str,
@@ -91,7 +93,9 @@ async fn create_tls_stream(
     Ok(tls_stream)
 }
 
-async fn convert_response_to_json_struct(res: Response<Incoming>) -> Result<ResponseJson, String> {
+async fn convert_response_to_json_struct(
+    res: Response<Incoming>,
+) -> Result<ResponseDetails, String> {
     let status = res.status().as_u16();
 
     let body_str = match response_body_to_string(res).await {
@@ -99,7 +103,7 @@ async fn convert_response_to_json_struct(res: Response<Incoming>) -> Result<Resp
         Err(e) => return Err(e),
     };
 
-    Ok(ResponseJson {
+    Ok(ResponseDetails {
         status_code: status,
         body: body_str,
     })

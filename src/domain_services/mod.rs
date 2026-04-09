@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::config::Config;
 use crate::results::{DomainResult, IpServiceResult, UpdateIpResults};
 
 #[cfg(feature = "cloudflare")]

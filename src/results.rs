@@ -1,14 +1,15 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::path::PathBuf;
 use tokio::fs;
 
-use crate::requests::ResponseJson;
+use crate::requests::ResponseDetails;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct IpServiceResult {
     pub service: String,
     pub ip_address: Option<String>,
-    pub response: Option<ResponseJson>,
+    pub response: Option<ResponseDetails>,
 }
 
 impl IpServiceResult {
@@ -25,7 +26,7 @@ impl IpServiceResult {
 pub struct DomainResult {
     pub hostname: String,
     pub ip_address: Option<String>,
-    pub response: Option<ResponseJson>,
+    pub response: Option<ResponseDetails>,
     pub errors: Vec<String>,
 }
 

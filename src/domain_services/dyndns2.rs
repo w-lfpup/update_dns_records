@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use crate::domain_services::DomainServices;
-use crate::requests::{request_http1_tls_response, ResponseJson};
+use crate::requests::{request_http1_tls_response, ResponseDetails};
 use crate::results::{DomainResult, UpdateIpResults};
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -34,7 +34,7 @@ pub async fn update_domains(
     domain_results: &mut HashMap<String, DomainResult>,
     ip_address: &str,
 ) {
-    let domains = match domain_services.dyndns2 {
+    let domains = match &domain_services.dyndns2 {
         Some(domains) => domains,
         _ => return,
     };
@@ -89,7 +89,7 @@ async fn build_domain_result(domain: &Dyndns2, ip_address: &str) -> DomainResult
     domain_result
 }
 
-fn verify_resposne(res: &ResponseJson) -> bool {
+fn verify_resposne(res: &ResponseDetails) -> bool {
     if res.status_code < 200 || res.status_code >= 300 {
         return false;
     }
