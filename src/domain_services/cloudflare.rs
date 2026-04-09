@@ -12,9 +12,23 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use crate::toolkit::config::Config;
-use crate::toolkit::domain_services::cloudflare::Cloudflare;
+// use crate::toolkit::domain_services::cloudflare::Cloudflare;
 use crate::toolkit::requests::{request_http1_tls_response, ResponseJson};
 use crate::toolkit::results::{DomainResult, UpdateIpResults};
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct Cloudflare {
+    pub api_token: String,
+    pub comment: Option<String>,
+    pub dns_record_id: String,
+    pub email: String,
+    pub name: String,
+    pub proxied: Option<bool>,
+    pub r#type: String,
+    pub tags: Option<Vec<String>>,
+    pub ttl: Option<usize>,
+    pub zone_id: String,
+}
 
 #[derive(Clone, Serialize, Debug)]
 pub struct CloudflareRequestBody {

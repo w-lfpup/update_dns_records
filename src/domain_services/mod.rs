@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
 
 use crate::toolkit::config::Config;
 use crate::toolkit::results::{DomainResult, IpServiceResult, UpdateIpResults};
@@ -7,6 +8,14 @@ use crate::toolkit::results::{DomainResult, IpServiceResult, UpdateIpResults};
 mod cloudflare;
 #[cfg(feature = "dyndns2")]
 mod dyndns2;
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct DomainServices {
+    #[cfg(feature = "cloudflare")]
+    pub cloudflare: Option<Vec<cloudflare::Cloudflare>>,
+    #[cfg(feature = "dyndns2")]
+    pub dyndns2: Option<Vec<dyndns2::Dyndns2>>,
+}
 
 pub async fn update_domains(
     config: &Config,

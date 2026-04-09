@@ -12,11 +12,20 @@ use bytes::Bytes;
 use http_body_util::Full;
 use hyper::Request;
 use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
 
 use crate::toolkit::config::Config;
-use crate::toolkit::domain_services::dyndns2::Dyndns2;
+// use crate::toolkit::domain_services::dyndns2::Dyndns2;
 use crate::toolkit::requests::{request_http1_tls_response, ResponseJson};
 use crate::toolkit::results::{DomainResult, UpdateIpResults};
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct Dyndns2 {
+    pub hostname: String,
+    pub password: String,
+    pub service_uri: String,
+    pub username: String,
+}
 
 const CLIENT_HEADER_VALUE: &str = "hyper/1.0 rust-client";
 

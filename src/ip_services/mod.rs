@@ -1,10 +1,11 @@
 use rand::{thread_rng, Rng};
 
 use crate::toolkit::config::Config;
-use crate::toolkit::ip_services::IpServices;
 use crate::toolkit::results::{IpServiceResult, UpdateIpResults};
 
 mod address_as_body;
+
+pub type IpServices = Vec<(String, String)>;
 
 pub async fn fetch_service_results(
     config: &Config,
