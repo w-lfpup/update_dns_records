@@ -123,3 +123,26 @@ async fn response_body_to_string(response: Response<Incoming>) -> Result<String,
 
     Ok(ip_str.to_string())
 }
+
+pub fn create_request_with_empty_body(url_string: &str) -> Result<Request<Full<Bytes>>, String> {
+    let uri = match hyper::Uri::try_from(url_string) {
+        Ok(u) => u,
+        Err(e) => return Err(e.to_string()),
+    };
+
+    let (_, authority) = match get_host_and_authority(&uri) {
+        Some(u) => u.clone(),
+        _ => return Err("authority not found in url".to_string()),
+    };
+
+    let req = match Request::builder()
+        .uri(uri)
+        .header(hyper::header::HOST, authority.as_str())
+        .body(Full::new(bytes::Bytes::new()))
+    {
+        Ok(r) => r,
+        Err(e) => return Err(e.to_string()),
+    };
+
+    Ok(req)
+}
