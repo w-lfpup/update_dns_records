@@ -3,7 +3,7 @@ use http_body_util::Full;
 use hyper::Request;
 use std::net;
 
-use crate::toolkit::requests::{get_host_and_authority, request_http1_tls_response, ResponseJson};
+use crate::requests::{get_host_and_authority, request_http1_tls_response, ResponseJson};
 
 pub async fn request_address_as_body(service: &str) -> Result<ResponseJson, String> {
     let request = match create_request_with_empty_body(service) {

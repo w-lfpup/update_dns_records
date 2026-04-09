@@ -2,8 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tokio::fs;
 
-use crate::toolkit::config::Config;
-use crate::toolkit::requests::ResponseJson;
+use crate::requests::ResponseJson;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct IpServiceResult {
@@ -63,8 +62,8 @@ impl UpdateIpResults {
     }
 }
 
-pub async fn read_results_from_disk(config: &Config) -> Result<UpdateIpResults, String> {
-    let json_as_str = match fs::read_to_string(&config.results_filepath).await {
+pub async fn read_results_from_disk(results_filepath: &PathBuf) -> Result<UpdateIpResults, String> {
+    let json_as_str = match fs::read_to_string(results_filepath).await {
         Ok(json_str) => json_str,
         Err(e) => return Err(e.to_string()),
     };
@@ -76,7 +75,7 @@ pub async fn read_results_from_disk(config: &Config) -> Result<UpdateIpResults, 
 }
 
 pub async fn write_results_to_disk(
-    config: &Config,
+    results_filepath: &PathBuf,
     ip_service_result: IpServiceResult,
     domain_service_results: Result<HashMap<String, DomainResult>, String>,
 ) -> Result<(), String> {
@@ -90,7 +89,7 @@ pub async fn write_results_to_disk(
         Err(e) => return Err(e.to_string()),
     };
 
-    if let Err(e) = fs::write(&config.results_filepath, json_str).await {
+    if let Err(e) = fs::write(results_filepath, json_str).await {
         return Err(e.to_string());
     };
 
