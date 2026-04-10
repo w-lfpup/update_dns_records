@@ -1,4 +1,4 @@
-use rand::{Rng, thread_rng};
+use rand::prelude::*;
 
 use crate::results::{IpServiceResult, UpdateIpResults};
 
@@ -70,8 +70,8 @@ fn get_random_ip_service(ip_services: &IpServices, prev_service: &str) -> Option
         _ => ip_services.len(),
     };
 
-    let mut rng = thread_rng();
-    let mut random_index = rng.gen_range(0..length);
+    let mut rng = rand::rng();
+    let mut random_index = rng.random_range(0..length);
     if let Some(index) = prev_index {
         if random_index >= index {
             random_index += 1;
