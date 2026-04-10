@@ -1,15 +1,23 @@
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::toolkit::config::Config;
-use crate::toolkit::results::{DomainResult, IpServiceResult, UpdateIpResults};
+use crate::results::{DomainResult, IpServiceResult, UpdateIpResults};
 
 #[cfg(feature = "cloudflare")]
 mod cloudflare;
 #[cfg(feature = "dyndns2")]
 mod dyndns2;
 
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct DomainServices {
+    #[cfg(feature = "cloudflare")]
+    pub cloudflare: Option<Vec<cloudflare::Cloudflare>>,
+    #[cfg(feature = "dyndns2")]
+    pub dyndns2: Option<Vec<dyndns2::Dyndns2>>,
+}
+
 pub async fn update_domains(
-    config: &Config,
+    domain_services: &DomainServices,
     prev_results: &Result<UpdateIpResults, String>,
     ip_service_result: &IpServiceResult,
 ) -> Result<HashMap<String, DomainResult>, String> {
@@ -21,10 +29,22 @@ pub async fn update_domains(
     let mut domain_results = HashMap::<String, DomainResult>::new();
 
     #[cfg(feature = "dyndns2")]
-    dyndns2::update_domains(config, prev_results, &mut domain_results, &ip_address).await;
+    dyndns2::update_domains(
+        domain_services,
+        prev_results,
+        &mut domain_results,
+        &ip_address,
+    )
+    .await;
 
     #[cfg(feature = "cloudflare")]
-    cloudflare::update_domains(config, prev_results, &mut domain_results, &ip_address).await;
+    cloudflare::update_domains(
+        domain_services,
+        prev_results,
+        &mut domain_results,
+        &ip_address,
+    )
+    .await;
 
     Ok(domain_results)
 }

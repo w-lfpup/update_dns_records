@@ -11,10 +11,23 @@ use hyper::Request;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::toolkit::config::Config;
-use crate::toolkit::domain_services::cloudflare::Cloudflare;
-use crate::toolkit::requests::{request_http1_tls_response, ResponseJson};
-use crate::toolkit::results::{DomainResult, UpdateIpResults};
+use crate::domain_services::DomainServices;
+use crate::requests::{request_http1_tls_response, ResponseDetails};
+use crate::results::{DomainResult, UpdateIpResults};
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct Cloudflare {
+    pub api_token: String,
+    pub dns_record_id: String,
+    pub email: String,
+    pub name: String,
+    pub r#type: String,
+    pub zone_id: String,
+    pub comment: Option<String>,
+    pub proxied: Option<bool>,
+    pub tags: Option<Vec<String>>,
+    pub ttl: Option<usize>,
+}
 
 #[derive(Clone, Serialize, Debug)]
 pub struct CloudflareRequestBody {
@@ -37,12 +50,12 @@ pub struct CloudflareMinimalResponseBody {
 }
 
 pub async fn update_domains(
-    config: &Config,
+    domain_services: &DomainServices,
     prev_results: &Result<UpdateIpResults, String>,
     domain_results: &mut HashMap<String, DomainResult>,
     ip_address: &str,
 ) {
-    let domains = match &config.domain_services.cloudflare {
+    let domains = match &domain_services.cloudflare {
         Some(domains) => domains,
         _ => return,
     };
@@ -65,9 +78,7 @@ pub async fn update_domains(
             }
         }
 
-        // build domain result
         domain_result = build_domain_result(&domain, ip_address).await;
-        // write over previous entry
         domain_results.insert(hostname, domain_result);
     }
 }
@@ -99,7 +110,7 @@ async fn build_domain_result(domain: &Cloudflare, ip_address: &str) -> DomainRes
     domain_result
 }
 
-fn verify_resposne(res: &ResponseJson) -> bool {
+fn verify_resposne(res: &ResponseDetails) -> bool {
     if res.status_code != 200 {
         return false;
     }

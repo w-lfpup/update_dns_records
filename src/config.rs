@@ -3,8 +3,8 @@ use serde_json;
 use std::path;
 use tokio::fs;
 
-use crate::toolkit::domain_services::DomainServices;
-use crate::toolkit::ip_services::IpServices;
+use crate::domain_services::DomainServices;
+use crate::ip_services::IpServices;
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Config {

@@ -11,23 +11,30 @@ use base64::{engine::general_purpose, Engine as _};
 use bytes::Bytes;
 use http_body_util::Full;
 use hyper::Request;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::toolkit::config::Config;
-use crate::toolkit::domain_services::dyndns2::Dyndns2;
-use crate::toolkit::requests::{request_http1_tls_response, ResponseJson};
-use crate::toolkit::results::{DomainResult, UpdateIpResults};
+use crate::domain_services::DomainServices;
+use crate::requests::{request_http1_tls_response, ResponseDetails};
+use crate::results::{DomainResult, UpdateIpResults};
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct Dyndns2 {
+    pub hostname: String,
+    pub password: String,
+    pub service_uri: String,
+    pub username: String,
+}
 
 const CLIENT_HEADER_VALUE: &str = "hyper/1.0 rust-client";
 
-// must return results
 pub async fn update_domains(
-    config: &Config,
+    domain_services: &DomainServices,
     prev_results: &Result<UpdateIpResults, String>,
     domain_results: &mut HashMap<String, DomainResult>,
     ip_address: &str,
 ) {
-    let domains = match &config.domain_services.dyndns2 {
+    let domains = match &domain_services.dyndns2 {
         Some(domains) => domains,
         _ => return,
     };
@@ -82,7 +89,7 @@ async fn build_domain_result(domain: &Dyndns2, ip_address: &str) -> DomainResult
     domain_result
 }
 
-fn verify_resposne(res: &ResponseJson) -> bool {
+fn verify_resposne(res: &ResponseDetails) -> bool {
     if res.status_code < 200 || res.status_code >= 300 {
         return false;
     }
