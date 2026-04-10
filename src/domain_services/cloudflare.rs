@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use crate::domain_services::DomainServices;
-use crate::requests::{request_http1_tls_response, ResponseDetails};
+use crate::requests::{ResponseDetails, request_http1_tls_response};
 use crate::results::{DomainResult, UpdateIpResults};
 
 #[derive(Clone, Serialize, Deserialize, Debug)]

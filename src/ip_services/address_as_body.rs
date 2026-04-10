@@ -1,7 +1,7 @@
 use std::net;
 
 use crate::requests::{
-    create_request_with_empty_body, request_http1_tls_response, ResponseDetails,
+    ResponseDetails, create_request_with_empty_body, request_http1_tls_response,
 };
 
 pub async fn request_address_as_body(service: &str) -> Result<ResponseDetails, String> {
