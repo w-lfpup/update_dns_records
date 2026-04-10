@@ -7,7 +7,7 @@
     Only the 911 response body warrants a retry
 */
 
-use base64::{engine::general_purpose, Engine as _};
+use base64::{Engine as _, engine::general_purpose};
 use bytes::Bytes;
 use http_body_util::Full;
 use hyper::Request;
@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use crate::domain_services::DomainServices;
-use crate::requests::{request_http1_tls_response, ResponseDetails};
+use crate::requests::{ResponseDetails, request_http1_tls_response};
 use crate::results::{DomainResult, UpdateIpResults};
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
