@@ -13,7 +13,7 @@ hyper-util = { version = "0.1", features = ["full"] }
 native-tls = "0.2"
 hyper = { version = "1.9", features = ["full"] }
 http-body-util = "0.1"
-rand = "0.8"
+rand = "0.10"
 base64 = { version = "0.22" }
 
 [features]
