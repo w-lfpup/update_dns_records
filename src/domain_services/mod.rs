@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+use crate::errors::Error;
 use crate::results::{DomainResult, IpServiceResult, UpdateIpResults};
 
 #[cfg(feature = "cloudflare")]
@@ -18,9 +19,9 @@ pub struct DomainServices {
 
 pub async fn update_domains(
     domain_services: &DomainServices,
-    prev_results: &Result<UpdateIpResults, String>,
+    prev_results: &Result<UpdateIpResults, Error>,
     ip_service_result: &IpServiceResult,
-) -> Result<HashMap<String, DomainResult>, String> {
+) -> Result<HashMap<String, DomainResult>, Error> {
     let ip_address = match get_ip_address(prev_results, ip_service_result) {
         Ok(ip) => ip,
         Err(e) => return Err(e),
@@ -50,9 +51,9 @@ pub async fn update_domains(
 }
 
 fn get_ip_address(
-    prev_results: &Result<UpdateIpResults, String>,
+    prev_results: &Result<UpdateIpResults, Error>,
     ip_service_result: &IpServiceResult,
-) -> Result<String, String> {
+) -> Result<String, Error> {
     if let Some(ip_addr) = &ip_service_result.ip_address {
         return Ok(ip_addr.clone());
     }
@@ -63,5 +64,7 @@ fn get_ip_address(
         }
     }
 
-    Err("there are no ip addresses to update".to_string())
+    Err(Error::Custom(
+        "there are no ip addresses to update".to_string(),
+    ))
 }

@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use crate::domain_services::DomainServices;
+use crate::errors::Error;
 use crate::requests::{ResponseDetails, request_http1_tls_response};
 use crate::results::{DomainResult, UpdateIpResults};
 
@@ -51,7 +52,7 @@ pub struct CloudflareMinimalResponseBody {
 
 pub async fn update_domains(
     domain_services: &DomainServices,
-    prev_results: &Result<UpdateIpResults, String>,
+    prev_results: &Result<UpdateIpResults, Error>,
     domain_results: &mut HashMap<String, DomainResult>,
     ip_address: &str,
 ) {
@@ -122,7 +123,7 @@ fn verify_resposne(res: &ResponseDetails) -> bool {
     false
 }
 
-fn get_cloudflare_req(domain: &Cloudflare, ip_addr: &str) -> Result<Request<Full<Bytes>>, String> {
+fn get_cloudflare_req(domain: &Cloudflare, ip_addr: &str) -> Result<Request<Full<Bytes>>, Error> {
     let uri_str = "https://api.cloudflare.com/client/v4/zones/".to_string()
         + &domain.zone_id
         + "/dns_records/"
@@ -142,7 +143,7 @@ fn get_cloudflare_req(domain: &Cloudflare, ip_addr: &str) -> Result<Request<Full
 
     let body_str = match serde_json::to_string(&body) {
         Ok(json_str) => json_str,
-        Err(e) => return Err(e.to_string()),
+        Err(e) => return Err(Error::SerdeJson(e.to_string())),
     };
 
     match Request::builder()
@@ -155,6 +156,6 @@ fn get_cloudflare_req(domain: &Cloudflare, ip_addr: &str) -> Result<Request<Full
         .body(Full::new(Bytes::from(body_str)))
     {
         Ok(req) => Ok(req),
-        Err(e) => Err(e.to_string()),
+        Err(e) => Err(Error::Hyper(e.to_string())),
     }
 }

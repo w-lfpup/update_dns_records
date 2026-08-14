@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use crate::domain_services::DomainServices;
+use crate::errors::Error;
 use crate::requests::{ResponseDetails, request_http1_tls_response};
 use crate::results::{DomainResult, UpdateIpResults};
 
@@ -30,7 +31,7 @@ const CLIENT_HEADER_VALUE: &str = "hyper/1.0 rust-client";
 
 pub async fn update_domains(
     domain_services: &DomainServices,
-    prev_results: &Result<UpdateIpResults, String>,
+    prev_results: &Result<UpdateIpResults, Error>,
     domain_results: &mut HashMap<String, DomainResult>,
     ip_address: &str,
 ) {
@@ -103,15 +104,16 @@ fn verify_resposne(res: &ResponseDetails) -> bool {
     false
 }
 
-fn get_https_dyndns2_req(domain: &Dyndns2, ip_addr: &str) -> Result<Request<Full<Bytes>>, String> {
+fn get_https_dyndns2_req(domain: &Dyndns2, ip_addr: &str) -> Result<Request<Full<Bytes>>, Error> {
     let uri_str = domain.service_uri.clone() + "?hostname=" + &domain.hostname + "&myip=" + ip_addr;
     let uri = match uri_str.parse::<hyper::Uri>() {
         Ok(u) => u,
-        Err(e) => return Err(e.to_string()),
+        Err(e) => return Err(Error::Io(e.to_string())),
     };
+
     let host = match uri.host() {
         Some(u) => u.to_string(),
-        None => return Err("host not found in uri".to_string()),
+        _ => return Err(Error::Custom("Failed to parse uri host.".to_string())),
     };
 
     let auth_str = domain.username.to_string() + ":" + &domain.password;
@@ -126,6 +128,6 @@ fn get_https_dyndns2_req(domain: &Dyndns2, ip_addr: &str) -> Result<Request<Full
         .body(Full::new(bytes::Bytes::new()))
     {
         Ok(req) => Ok(req),
-        Err(e) => Err(e.to_string()),
+        Err(e) => Err(Error::Hyper(e.to_string())),
     }
 }
