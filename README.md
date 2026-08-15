@@ -1,18 +1,18 @@
-# Update Dns Records
+# Ddnsd
 
 Send ip address updates to DNS services.
 
 ## How to use
 
-The following sections describe how to install and run `update_dns_records`.
+The following sections describe how to install and run `ddnsd`.
 
 ### Install
 
 Run the following shell commands:
 
 ```sh
-git clone https://github.com/w-lfpup/update_dns_records
-cargo install --path update_dns_records
+git clone https://github.com/w-lfpup/ddnsd
+cargo install --path ddnsd
 ```
 
 All services are directly related to features.
@@ -23,18 +23,18 @@ All features (and therefore all services) are included by default.
 
 Minimal installations should use the `--features` flag.
 
-For example, the following script will install `update_dns_records` but only support dyndns2:
+For example, the following script will install `ddnsd` but only support dyndns2:
 
 ```sh
-cargo install --path update_dns_records --features dyndns2
+cargo install --path ddnsd --features dyndns2
 ```
 
 ### Configuration
 
-The `update_dns_records` application requires a valid JSON configuration to run.
+The `ddnsd` application requires a valid JSON configuration to run.
 
 An example configuration example can be found at
-`./update_dns_records.example.json`
+`./ddnsd.example.json`
 
 ```JSON
 {
@@ -52,21 +52,21 @@ The `results_filepath` property can be relative to the location of the `config` 
 
 The `ip_services` property defines a list of `services` with a `url` and its `response_type`.
 
-### Run update_dns_records
+### Run ddnsd
 
-The `update_dns_records` application accepts one argument defining a path to a configuration file.
+The `ddnsd` application accepts one argument defining a path to a configuration file.
 
 ```
-update_dns_records <path_to_json_config>
+ddnsd <path_to_json_config>
 ```
 
-The results of the `update_dns_records` will be written to the `results_filepath` property of the `config`.
+The results of the `ddnsd` will be written to the `results_filepath` property of the `config`.
 
 Paths can be absolute or relative to the configuration file.
 
 ## Available services
 
-The `update_dns_records` application provides support for the following `services`:
+The `ddnsd` application provides support for the following `services`:
 
 - [dyndns2](#dyndns2)
 - [cloudflare](#cloudflare)
