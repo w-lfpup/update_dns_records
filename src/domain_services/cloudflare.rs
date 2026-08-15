@@ -90,7 +90,7 @@ async fn build_domain_result(domain: &Cloudflare, ip_address: &str) -> DomainRes
     let request = match get_cloudflare_req(&domain, &ip_address) {
         Ok(s) => s,
         Err(e) => {
-            domain_result.errors.push(e);
+            domain_result.error = Some(e);
             return domain_result;
         }
     };
@@ -98,7 +98,7 @@ async fn build_domain_result(domain: &Cloudflare, ip_address: &str) -> DomainRes
     let response = match request_http1_tls_response(request).await {
         Ok(r) => r,
         Err(e) => {
-            domain_result.errors.push(e);
+            domain_result.error = Some(e);
             return domain_result;
         }
     };

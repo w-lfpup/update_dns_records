@@ -69,7 +69,7 @@ async fn build_domain_result(domain: &Dyndns2, ip_address: &str) -> DomainResult
     let request = match get_https_dyndns2_req(&domain, &ip_address) {
         Ok(s) => s,
         Err(e) => {
-            domain_result.errors.push(e);
+            domain_result.error = Some(e);
             return domain_result;
         }
     };
@@ -77,7 +77,7 @@ async fn build_domain_result(domain: &Dyndns2, ip_address: &str) -> DomainResult
     let response = match request_http1_tls_response(request).await {
         Ok(r) => r,
         Err(e) => {
-            domain_result.errors.push(e);
+            domain_result.error = Some(e);
             return domain_result;
         }
     };

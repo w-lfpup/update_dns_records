@@ -28,7 +28,7 @@ pub struct DomainResult {
     pub hostname: String,
     pub ip_address: Option<String>,
     pub response: Option<ResponseDetails>,
-    pub errors: Vec<Error>,
+    pub error: Option<Error>,
 }
 
 impl DomainResult {
@@ -37,7 +37,7 @@ impl DomainResult {
             hostname: hostname.to_string(),
             ip_address: None,
             response: None,
-            errors: Vec::<Error>::new(),
+            error: None,
         }
     }
 }
