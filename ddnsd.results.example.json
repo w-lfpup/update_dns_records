@@ -7,7 +7,7 @@
     "something.com": {
       "hostname": "something.com",
       "ip_address": "192.168.0.1",
-      "errors": []
+      "errors": null
     }
   }
 }
