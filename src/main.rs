@@ -2,15 +2,22 @@ use std::{env, path};
 
 mod config;
 mod domain_services;
+mod errors;
 mod ip_services;
 mod requests;
 mod results;
 
+use errors::Error;
+
 #[tokio::main]
-async fn main() -> Result<(), String> {
+async fn main() -> Result<(), Error> {
     let filepath_str = match env::args().nth(1) {
         Some(a) => a,
-        None => return Err("argument error:\nconfig file not found.".to_string()),
+        None => {
+            return Err(Error::Custom(
+                "argument error:\nconfig file not found.".to_string(),
+            ));
+        }
     };
 
     let config_path = path::Path::new(&filepath_str);

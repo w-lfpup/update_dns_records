@@ -1,3 +1,4 @@
+use crate::errors::Error;
 use rand::{Rng, thread_rng};
 
 use crate::results::{IpServiceResult, UpdateIpResults};
@@ -8,16 +9,16 @@ pub type IpServices = Vec<(String, String)>;
 
 pub async fn fetch_service_results(
     ip_services: &IpServices,
-    prev_results: &Result<UpdateIpResults, String>,
-) -> Result<IpServiceResult, String> {
+    prev_results: &Result<UpdateIpResults, Error>,
+) -> Result<IpServiceResult, Error> {
     let service = match prev_results {
         Ok(results) => &results.ip_service_result.service,
-        _ => "previous-results-do-not-exist",
+        Err(e) => return Err(Error::Hyper(e.to_string())),
     };
 
     let (ip_service, response_type) = match get_random_ip_service(ip_services, service) {
         Some(r) => r,
-        _ => return Err("failed to find ip service".to_string()),
+        _ => return Err(Error::Custom("failed to find ip service".to_string())),
     };
 
     let response_json_results = match response_type {

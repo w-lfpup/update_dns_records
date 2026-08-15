@@ -9,20 +9,24 @@ use serde::{Deserialize, Serialize};
 use std::io;
 use tokio::net::TcpStream;
 
+use crate::errors::Error;
+
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct ResponseDetails {
     pub status_code: u16,
-    // content type
-    // content encoding
     pub body: String,
 }
 
 pub async fn request_http1_tls_response(
     req: Request<Full<Bytes>>,
-) -> Result<ResponseDetails, String> {
+) -> Result<ResponseDetails, Error> {
     let (host, authority) = match get_host_and_authority(&req.uri()) {
         Some(stream) => stream,
-        _ => return Err("failed to get authority from uri".to_string()),
+        _ => {
+            return Err(Error::Custom(
+                "failed to get authority from uri".to_string(),
+            ));
+        }
     };
 
     let io = match create_tls_stream(&host, &authority).await {
@@ -32,7 +36,7 @@ pub async fn request_http1_tls_response(
 
     let (mut sender, conn) = match http1::handshake(io).await {
         Ok(handshake) => handshake,
-        Err(e) => return Err(e.to_string()),
+        Err(e) => return Err(Error::Custom(e.to_string())),
     };
 
     tokio::task::spawn(async move {
@@ -41,7 +45,7 @@ pub async fn request_http1_tls_response(
 
     let res = match sender.send_request(req).await {
         Ok(res) => res,
-        Err(e) => return Err(e.to_string()),
+        Err(e) => return Err(Error::Custom(e.to_string())),
     };
 
     convert_response_to_json_struct(res).await
@@ -72,22 +76,20 @@ pub fn get_host_and_authority(uri: &Uri) -> Option<(&str, String)> {
 async fn create_tls_stream(
     host: &str,
     addr: &str,
-) -> Result<TokioIo<tokio_native_tls::TlsStream<TcpStream>>, String> {
+) -> Result<TokioIo<tokio_native_tls::TlsStream<TcpStream>>, Error> {
     let tls_connector = match TlsConnector::new() {
         Ok(cx) => tokio_native_tls::TlsConnector::from(cx),
-        Err(e) => return Err(e.to_string()),
+        Err(e) => return Err(Error::NativeTls(e.to_string())),
     };
 
     let client_stream = match TcpStream::connect(addr).await {
         Ok(s) => s,
-        Err(e) => {
-            return Err(e.to_string());
-        }
+        Err(e) => return Err(Error::Io(e.to_string())),
     };
 
     let tls_stream = match tls_connector.connect(host, client_stream).await {
         Ok(s) => TokioIo::new(s),
-        Err(e) => return Err(e.to_string()),
+        Err(e) => return Err(Error::Io(e.to_string())),
     };
 
     Ok(tls_stream)
@@ -95,7 +97,7 @@ async fn create_tls_stream(
 
 async fn convert_response_to_json_struct(
     res: Response<Incoming>,
-) -> Result<ResponseDetails, String> {
+) -> Result<ResponseDetails, Error> {
     let status = res.status().as_u16();
 
     let body_str = match response_body_to_string(res).await {
@@ -109,30 +111,30 @@ async fn convert_response_to_json_struct(
     })
 }
 
-async fn response_body_to_string(response: Response<Incoming>) -> Result<String, String> {
+async fn response_body_to_string(response: Response<Incoming>) -> Result<String, Error> {
     // asynchronously aggregate the chunks of the body
     let body = match response.collect().await {
         Ok(b) => b.aggregate(),
-        Err(e) => return Err(e.to_string()),
+        Err(e) => return Err(Error::Hyper(e.to_string())),
     };
 
     let ip_str = match io::read_to_string(body.reader()) {
         Ok(b) => b,
-        Err(e) => return Err(e.to_string()),
+        Err(e) => return Err(Error::Io(e.to_string())),
     };
 
     Ok(ip_str.to_string())
 }
 
-pub fn create_request_with_empty_body(url_string: &str) -> Result<Request<Full<Bytes>>, String> {
+pub fn create_request_with_empty_body(url_string: &str) -> Result<Request<Full<Bytes>>, Error> {
     let uri = match hyper::Uri::try_from(url_string) {
         Ok(u) => u,
-        Err(e) => return Err(e.to_string()),
+        Err(_) => return Err(Error::Custom("Invalid Uri".to_string())),
     };
 
     let (_, authority) = match get_host_and_authority(&uri) {
         Some(u) => u.clone(),
-        _ => return Err("authority not found in url".to_string()),
+        _ => return Err(Error::Custom("authority not found in url".to_string())),
     };
 
     let req = match Request::builder()
@@ -141,7 +143,7 @@ pub fn create_request_with_empty_body(url_string: &str) -> Result<Request<Full<B
         .body(Full::new(bytes::Bytes::new()))
     {
         Ok(r) => r,
-        Err(e) => return Err(e.to_string()),
+        Err(e) => return Err(Error::Hyper(e.to_string())),
     };
 
     Ok(req)
