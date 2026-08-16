@@ -1,9 +1,5 @@
 use serde::{Deserialize, Serialize};
-// use serde_json::Error as SerdeJsonError;
 use std::fmt;
-// use std::io::Error as IoError;
-// use hyper::Error as HyperError;
-// use hyper::http::uri::{InvalidUri};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Error {
