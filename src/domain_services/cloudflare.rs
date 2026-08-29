@@ -11,6 +11,7 @@ use hyper::Request;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+use crate::domain_services;
 use crate::domain_services::DomainServices;
 use crate::errors::Error;
 use crate::requests::{ResponseDetails, request_http1_tls_response};
@@ -124,12 +125,17 @@ fn verify_resposne(res: &ResponseDetails) -> bool {
 }
 
 fn get_cloudflare_req(domain: &Cloudflare, ip_addr: &str) -> Result<Request<Full<Bytes>>, Error> {
+    let api_token = match domain_services::get_api_token_from_env(&domain.api_token) {
+        Ok(token) => token,
+        Err(e) => return Err(e),
+    };
+
     let uri_str = "https://api.cloudflare.com/client/v4/zones/".to_string()
         + &domain.zone_id
         + "/dns_records/"
         + &domain.dns_record_id;
 
-    let auth_value = "Bearer ".to_string() + &domain.api_token;
+    let auth_value = "Bearer ".to_string() + &api_token;
 
     let body = CloudflareRequestBody {
         content: ip_addr.to_string(),
