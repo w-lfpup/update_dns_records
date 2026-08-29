@@ -78,7 +78,7 @@ pub fn get_api_token_or_fallback_from_env(api_token: &str) -> Result<String, Err
                 Some(k) => k,
                 _ => {
                     return Err(Error::Custom(
-                        "Could not retrieve API key from ENV variable.".to_string(),
+                        "Failed to parse env variable from domain details.".to_string(),
                     ));
                 }
             };
@@ -87,7 +87,7 @@ pub fn get_api_token_or_fallback_from_env(api_token: &str) -> Result<String, Err
                 Ok(token) => Ok(token),
                 _ => {
                     return Err(Error::Custom(
-                        "Could not retrieve API key from ENV variable.".to_string(),
+                        "Failed retrieve API key from ENV variable.".to_string(),
                     ));
                 }
             }
