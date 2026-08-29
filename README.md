@@ -120,6 +120,19 @@ Use the following schema to add `cloudflare` domains to the `config`.
 }
 ```
 
+### Secrets
+
+Any password or api key can be derived from an environment variable.
+
+To pull an environment variable, use the prefix `ENV:` followed by the
+variable name as demonstrated by the following json snippet.
+
+```json
+{
+	"password": "ENV:MY_SECRET_PASSWORD"
+}
+```
+
 ## Licence
 
 BSD 3-Clause License

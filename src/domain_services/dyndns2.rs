@@ -14,6 +14,7 @@ use hyper::Request;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+use crate::domain_services;
 use crate::domain_services::DomainServices;
 use crate::errors::Error;
 use crate::requests::{ResponseDetails, request_http1_tls_response};
@@ -57,6 +58,9 @@ pub async fn update_domains(
                 continue;
             }
         }
+
+        // domain.password if password.starts_with("ENV:");
+        //
 
         let domain_result = build_domain_result(&domain, ip_address).await;
         domain_results.insert(hostname, domain_result);
@@ -116,7 +120,12 @@ fn get_https_dyndns2_req(domain: &Dyndns2, ip_addr: &str) -> Result<Request<Full
         _ => return Err(Error::Custom("Failed to parse uri host.".to_string())),
     };
 
-    let auth_str = domain.username.to_string() + ":" + &domain.password;
+    let password = match domain_services::get_api_token_or_fallback_from_env(&domain.password) {
+        Ok(token) => token,
+        Err(e) => return Err(e),
+    };
+
+    let auth_str = domain.username.to_string() + ":" + &password;
     let auth = general_purpose::STANDARD.encode(&auth_str.as_bytes());
     let auth_value = "Basic ".to_string() + &auth;
 

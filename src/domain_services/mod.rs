@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::env;
+use std::ffi::OsStr;
 
 use crate::errors::Error;
 use crate::results::{DomainResult, IpServiceResult, UpdateIpResults};
@@ -67,4 +69,29 @@ fn get_ip_address(
     Err(Error::Custom(
         "there are no ip addresses to update".to_string(),
     ))
+}
+
+pub fn get_api_token_or_fallback_from_env(api_token: &str) -> Result<String, Error> {
+    match api_token.starts_with("ENV:") {
+        true => {
+            let key = match api_token.strip_prefix("ENV:") {
+                Some(k) => k,
+                _ => {
+                    return Err(Error::Custom(
+                        "Failed to parse env variable from domain details.".to_string(),
+                    ));
+                }
+            };
+
+            match env::var(OsStr::new(key)) {
+                Ok(token) => Ok(token),
+                _ => {
+                    return Err(Error::Custom(
+                        "Failed retrieve API key from ENV variable.".to_string(),
+                    ));
+                }
+            }
+        }
+        _ => Ok(api_token.to_string()),
+    }
 }
