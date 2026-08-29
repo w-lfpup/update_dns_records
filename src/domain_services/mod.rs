@@ -71,7 +71,7 @@ fn get_ip_address(
     ))
 }
 
-pub fn get_api_token_from_env(api_token: &str) -> Result<String, Error> {
+pub fn get_api_token_or_fallback_from_env(api_token: &str) -> Result<String, Error> {
     match api_token.starts_with("ENV:") {
         true => {
             let key = match api_token.strip_prefix("ENV:") {

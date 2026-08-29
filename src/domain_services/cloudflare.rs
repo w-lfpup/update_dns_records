@@ -125,7 +125,7 @@ fn verify_resposne(res: &ResponseDetails) -> bool {
 }
 
 fn get_cloudflare_req(domain: &Cloudflare, ip_addr: &str) -> Result<Request<Full<Bytes>>, Error> {
-    let api_token = match domain_services::get_api_token_from_env(&domain.api_token) {
+    let api_token = match domain_services::get_api_token_or_fallback_from_env(&domain.api_token) {
         Ok(token) => token,
         Err(e) => return Err(e),
     };

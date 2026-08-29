@@ -120,8 +120,7 @@ fn get_https_dyndns2_req(domain: &Dyndns2, ip_addr: &str) -> Result<Request<Full
         _ => return Err(Error::Custom("Failed to parse uri host.".to_string())),
     };
 
-    // password
-    let password = match domain_services::get_api_token_from_env(&domain.password) {
+    let password = match domain_services::get_api_token_or_fallback_from_env(&domain.password) {
         Ok(token) => token,
         Err(e) => return Err(e),
     };
